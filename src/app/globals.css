@@ -409,6 +409,22 @@ a {
   letter-spacing: -0.02em;
   color: var(--ink);
 }
+.logo-img {
+  display: block;
+  width: clamp(220px, 58vw, 400px);
+  height: auto;
+}
+.ad-brand .logo-img {
+  width: 168px;
+}
+.login-card .logo-img {
+  width: 220px;
+}
+@media (max-width: 900px) {
+  .ad-brand .logo-img {
+    width: 120px;
+  }
+}
 .wordmark .wm-main {
   display: block;
   font-size: clamp(38px, 8.4vw, 76px);

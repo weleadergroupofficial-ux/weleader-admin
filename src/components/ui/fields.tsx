@@ -1,6 +1,7 @@
 "use client";
 
 import { useId as useReactId, useRef, type ReactNode } from "react";
+import { LOGO_SRC } from "./logo";
 
 function useId(prefix: string) {
   return `${prefix}${useReactId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -216,14 +217,8 @@ export function WaveLine() {
 
 export function Wordmark() {
   return (
-    <div className="wordmark" aria-label="BEAUTY WAVE in INCHEON 2026">
-      <span className="wm-main" aria-hidden="true">
-        BEAUTY WAVE
-      </span>
-      <span className="wm-sub" aria-hidden="true">
-        in INCHEON 2026
-        <WaveLine />
-      </span>
+    <div className="wordmark">
+      <img className="logo-img" src={LOGO_SRC} alt="BEAUTY WAVE in INCHEON 2026" width={1639} height={688} />
     </div>
   );
 }
