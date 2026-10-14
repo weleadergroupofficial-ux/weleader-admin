@@ -217,6 +217,27 @@ async function route(req: Request, path: string[]): Promise<Response> {
     throw new HttpError(405, "지원하지 않는 요청입니다.");
   }
 
+  // ----- 단일 링크 접속 : 업체 선택 + 확인번호 -----
+  if (a === "entry") {
+    if (b === "companies" && method === "GET") {
+      return json(await rpc<Array<{ id: string; name: string }>>("bw_entry_companies"));
+    }
+    if (b === "verify" && method === "POST") {
+      const body = await readJson(req, 4096);
+      const companyId = uuid(typeof body.companyId === "string" ? body.companyId : undefined);
+      const code = typeof body.code === "string" ? body.code.trim() : "";
+      if (!/^[0-9]{4}$/.test(code)) throw new HttpError(400, "휴대폰 번호 뒷자리 숫자 4자리를 입력해 주세요.");
+      const r = await rpc<{ status: string; token?: string; remaining?: number; until?: string }>("bw_verify_entry", { companyId, code });
+      if (r.status === "ok" && r.token) return json({ token: r.token });
+      if (r.status === "no_code")
+        throw new HttpError(403, "이 업체는 확인번호가 등록되어 있지 않습니다. 운영사무국에 문의해 주세요.");
+      if (r.status === "locked")
+        throw new HttpError(429, "확인번호를 여러 번 잘못 입력했습니다. 10분 뒤 다시 시도하거나 운영사무국에 문의해 주세요.");
+      throw new HttpError(401, `확인번호가 맞지 않습니다. 신청서에 적은 담당자 휴대폰 번호 뒷자리를 확인해 주세요. (남은 기회 ${r.remaining ?? 0}번)`);
+    }
+    throw new HttpError(404, "요청한 주소를 찾을 수 없습니다.");
+  }
+
   if (a !== "admin") throw new HttpError(404, "요청한 주소를 찾을 수 없습니다.");
 
   // ----- 관리자 인증 -----
@@ -316,6 +337,11 @@ async function route(req: Request, path: string[]): Promise<Response> {
           if (typeof body.name !== "string" || !body.name.trim() || body.name.trim().length > 100)
             throw new HttpError(400, "업체명은 1~100자로 입력해 주세요.");
           payload.name = body.name.trim();
+        }
+        if (body.verifyCode !== undefined) {
+          if (body.verifyCode !== null && (typeof body.verifyCode !== "string" || !/^[0-9]{4}$/.test(body.verifyCode)))
+            throw new HttpError(400, "확인번호는 숫자 4자리로 입력해 주세요.");
+          payload.verifyCode = body.verifyCode ?? "";
         }
         if (body.isLocked !== undefined) {
           if (typeof body.isLocked !== "boolean") throw new HttpError(400, "입력값이 올바르지 않습니다.");

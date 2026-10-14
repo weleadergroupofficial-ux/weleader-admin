@@ -63,6 +63,7 @@ export interface AdminCompany {
   sortOrder: number;
   isLocked: boolean;
   createdAt: string;
+  verifyCode: string | null;
   submission: Submission | null;
 }
 

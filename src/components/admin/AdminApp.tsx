@@ -535,6 +535,23 @@ function Companies({ ctx }: { ctx: Ctx }) {
     }
   }
 
+  const [codeEdit, setCodeEdit] = useState<{ id: string; code: string } | null>(null);
+  async function saveCode() {
+    if (!codeEdit) return;
+    if (codeEdit.code !== "" && !/^[0-9]{4}$/.test(codeEdit.code)) {
+      ctx.notify("확인번호는 숫자 4자리로 입력해 주세요.", true);
+      return;
+    }
+    try {
+      await api(`/api/admin/companies/${codeEdit.id}`, { method: "PATCH", json: { verifyCode: codeEdit.code || null } });
+      setCodeEdit(null);
+      await ctx.reload();
+      ctx.notify("확인번호를 저장했습니다.");
+    } catch (e) {
+      ctx.notify(e instanceof Error ? e.message : "저장하지 못했습니다.", true);
+    }
+  }
+
   async function setLock(c: AdminCompany, isLocked: boolean) {
     try {
       await api(`/api/admin/companies/${c.id}`, { method: "PATCH", json: { isLocked } });
@@ -555,7 +572,9 @@ function Companies({ ctx }: { ctx: Ctx }) {
       <div className="ad-top">
         <div>
           <h1>업체 · 링크 관리</h1>
-          <p>참가업체 명단을 등록하면 업체마다 전용 제출 링크가 만들어집니다. 링크를 받은 업체만 자기 정보를 작성·수정할 수 있습니다.</p>
+          <p>
+            단톡방 공용 링크(사이트 첫 화면 주소)로 들어온 업체는 업체명과 확인번호(담당자 휴대폰 뒷자리)로 본인을 확인합니다. 업체별 전용 링크도 그대로 쓸 수 있습니다.
+          </p>
         </div>
         <div className="ad-actions">
           <button className="btn btn-ghost btn-sm" disabled={!companies.length} onClick={copyAll}>
@@ -645,6 +664,7 @@ function Companies({ ctx }: { ctx: Ctx }) {
                   <th>업체명</th>
                   <th className="c">제출 여부</th>
                   <th>전용 제출 링크</th>
+                  <th className="c">확인번호</th>
                   <th className="c">수정 잠금</th>
                   <th className="r">관리</th>
                 </tr>
@@ -697,6 +717,37 @@ function Companies({ ctx }: { ctx: Ctx }) {
                           열기
                         </a>
                       </div>
+                    </td>
+                    <td className="c">
+                      {codeEdit?.id === c.id ? (
+                        <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+                          <input
+                            className="search num"
+                            style={{ minHeight: 36, width: 76, flex: "none", textAlign: "center" }}
+                            value={codeEdit.code}
+                            inputMode="numeric"
+                            maxLength={4}
+                            autoFocus
+                            aria-label={`${c.name} 확인번호`}
+                            onChange={(e) => setCodeEdit({ ...codeEdit, code: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveCode();
+                              if (e.key === "Escape") setCodeEdit(null);
+                            }}
+                          />
+                          <button className="btn btn-primary btn-sm" onClick={saveCode}>
+                            저장
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          className="link-btn num"
+                          title="담당자 휴대폰 뒷자리 4자리 (단톡방 공용 링크 접속용)"
+                          onClick={() => setCodeEdit({ id: c.id, code: c.verifyCode ?? "" })}
+                        >
+                          {c.verifyCode ?? "미설정"}
+                        </button>
+                      )}
                     </td>
                     <td className="c">
                       <label className="toggle" title="잠그면 참가업체가 수정할 수 없습니다">
