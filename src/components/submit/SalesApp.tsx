@@ -337,8 +337,8 @@ export default function SalesApp({ token }: { token: string }) {
                           <td>
                             {d.label} ({d.weekday})
                           </td>
-                          <td className="r num">{e ? `${formatNumber(e.items)}건` : "-"}</td>
-                          <td className="r num">{e ? `${formatNumber(e.amount)}원` : "-"}</td>
+                          <td className="r num">{e ? `${formatNumber(e.items)}건` : <span className="muted">미입력</span>}</td>
+                          <td className="r num">{e ? `${formatNumber(e.amount)}원` : <span className="muted">미입력</span>}</td>
                           <td className="c">{e ? (d.last && !e.surveyDone ? "설문 필요" : "제출 완료") : "미입력"}</td>
                         </tr>
                       );

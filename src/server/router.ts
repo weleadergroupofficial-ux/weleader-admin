@@ -335,7 +335,7 @@ async function route(req: Request, path: string[]): Promise<Response> {
     const format = new URL(req.url).searchParams.get("format") === "pdf" ? "pdf" : "xlsx";
     const overview = await rpc<AdminOverview>("bw_admin_overview");
     let sales: SalesEntry[] = [];
-    if (type === "sales") sales = await rpc<SalesEntry[]>("bw_admin_sales");
+    if (type === "sales" || type === "sales-report") sales = await rpc<SalesEntry[]>("bw_admin_sales");
     const doc = buildExportDoc(type, overview.companies, baseUrl(req), sales);
     const filename = `BEAUTYWAVE2026_${EXPORT_FILES[type]}_${stamp()}.${format}`;
     if (format === "pdf") return fileResponse(await buildPdf(doc, originOf(req)), filename, "application/pdf");

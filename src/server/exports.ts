@@ -1,9 +1,10 @@
 import { discountRate, giftTotal, submissionGiftSummary } from "@/lib/calc";
 import type { AdminCompany } from "@/lib/types";
 import { EVENT_DAYS, type SalesEntry } from "@/lib/event";
+import { computeSalesStats } from "@/lib/salesStats";
 import { colLetter, FIRST_ROW, type ExportDoc, type SheetSpec } from "./xlsx";
 
-export type ExportType = "all" | "price-board" | "lucky-draw" | "links" | "sales";
+export type ExportType = "all" | "price-board" | "lucky-draw" | "links" | "sales" | "sales-report";
 
 export const EXPORT_FILES: Record<ExportType, string> = {
   all: "전체_참가업체_제출정보",
@@ -11,6 +12,7 @@ export const EXPORT_FILES: Record<ExportType, string> = {
   "lucky-draw": "럭키드로우_경품관리",
   links: "업체별_제출링크",
   sales: "일자별_판매실적",
+  "sales-report": "판매실적_성과리포트",
 };
 
 const TITLES: Record<ExportType, [string, string]> = {
@@ -19,8 +21,10 @@ const TITLES: Record<ExportType, [string, string]> = {
   "lucky-draw": ["럭키드로우 경품 관리", "경품 목록 및 업체별 합계"],
   links: ["업체별 제출 링크", "참가업체 전용 제출 링크 및 제출 여부"],
   sales: ["일자별 판매실적", "행사 기간 10/23 · 10/24 · 10/25 업체별 판매실적"],
+  "sales-report": ["판매실적 성과 리포트", "2026.10.23 (금) – 10.25 (일) · 주최 인천광역시 · 주관 인천테크노파크 · 운영 주식회사 웰리더"],
 };
 
+const NOT_ENTERED = "미입력";
 const d = (iso: string | null | undefined) => (iso ? new Date(iso) : null);
 const rate = (r: number, e: number) => {
   const v = discountRate(r, e);
@@ -238,7 +242,7 @@ function salesSheets(companies: AdminCompany[], sales: SalesEntry[]): SheetSpec[
     let ta = 0;
     EVENT_DAYS.forEach((d, di) => {
       const e = by.get(`${c.id}|${d.date}`);
-      row.push(e ? e.items : null, e ? e.amount : null);
+      row.push(e ? e.items : NOT_ENTERED, e ? e.amount : NOT_ENTERED);
       if (e) {
         totals.items[di] += e.items;
         totals.amount[di] += e.amount;
@@ -248,7 +252,7 @@ function salesSheets(companies: AdminCompany[], sales: SalesEntry[]): SheetSpec[
     });
     const last = by.get(`${c.id}|${EVENT_DAYS[EVENT_DAYS.length - 1].date}`);
     const entered = EVENT_DAYS.filter((d) => by.has(`${c.id}|${d.date}`)).length;
-    row.push(entered ? ti : null, entered ? ta : null, `${entered}/${EVENT_DAYS.length}일`, last ? (last.surveyDone ? "완료" : "미완료") : "");
+    row.push(entered ? ti : NOT_ENTERED, entered ? ta : NOT_ENTERED, `${entered}/${EVENT_DAYS.length}일`, last ? (last.surveyDone ? "완료" : "미완료") : "");
     rows.push(row);
   });
 
@@ -319,6 +323,95 @@ function salesSheets(companies: AdminCompany[], sales: SalesEntry[]): SheetSpec[
   ];
 }
 
+
+function pct(n: number, total: number): number {
+  return total > 0 ? n / total : 0;
+}
+
+function reportSheets(companies: AdminCompany[], sales: SalesEntry[]): SheetSpec[] {
+  const st = computeSalesStats(companies, sales);
+  const lastDate = EVENT_DAYS[EVENT_DAYS.length - 1].date;
+  const surveyDone = companies.filter((c) => st.get(c.id, lastDate)?.surveyDone).length;
+
+  const dayRows: SheetSpec["rows"] = st.days.map((d) => [
+    `${d.label} (${EVENT_DAYS.find((x) => x.date === d.date)?.weekday ?? ""})`,
+    d.entered > 0 ? `${d.entered} / ${d.total}개` : NOT_ENTERED,
+    d.entered > 0 ? pct(d.entered, d.total) : null,
+    d.entered > 0 ? d.items : NOT_ENTERED,
+    d.entered > 0 ? d.amount : NOT_ENTERED,
+    d.entered > 0 ? Math.round(d.amount / d.entered) : NOT_ENTERED,
+  ]);
+
+  const ranked = st.byCompany.filter((c) => c.days > 0).sort((a, b) => b.amount - a.amount || b.items - a.items || a.name.localeCompare(b.name, "ko"));
+  const topRows: SheetSpec["rows"] = ranked.slice(0, 10).map((c, i) => [i + 1, c.name, c.days + "일", c.items, c.amount, st.amount > 0 ? c.amount / st.amount : null]);
+
+  const missingRows: SheetSpec["rows"] = [];
+  for (const d of st.days) for (const c of d.missing) missingRows.push([`${d.short} (${EVENT_DAYS.find((x) => x.date === d.date)?.weekday ?? ""})`, c.name]);
+
+  return [
+    {
+      name: "일자별 실적",
+      heading: "일자별 실적 요약",
+      columns: [
+        { header: "행사 일자", width: 16, type: "center" },
+        { header: "입력 업체", width: 14, type: "center" },
+        { header: "입력률", width: 10, type: "percent" },
+        { header: "판매 건수", width: 13, type: "number" },
+        { header: "판매금액(원)", width: 18, type: "number" },
+        { header: "입력 업체 평균(원)", width: 18, type: "number" },
+      ],
+      rows: dayRows,
+      totals: [
+        "합계",
+        st.companiesEntered > 0 ? `${st.companiesEntered} / ${st.companiesTotal}개` : NOT_ENTERED,
+        st.companiesEntered > 0 ? pct(st.companiesEntered, st.companiesTotal) : null,
+        st.companiesEntered > 0 ? st.items : NOT_ENTERED,
+        st.companiesEntered > 0 ? st.amount : NOT_ENTERED,
+        st.companiesEntered > 0 ? Math.round(st.amount / st.companiesEntered) : NOT_ENTERED,
+      ],
+    },
+    {
+      name: "상위 업체 TOP10",
+      heading: "판매금액 상위 업체 (입력한 업체 기준)",
+      columns: [
+        { header: "순위", width: 7, type: "center" },
+        { header: "업체명", width: 28 },
+        { header: "입력 일수", width: 10, type: "center" },
+        { header: "총 판매 건수", width: 14, type: "number" },
+        { header: "총 판매금액(원)", width: 18, type: "number" },
+        { header: "전체 대비 비중", width: 13, type: "percent" },
+      ],
+      rows: topRows,
+    },
+    {
+      name: "미입력 업체",
+      heading: "아직 입력하지 않은 업체 (일자별)",
+      columns: [
+        { header: "행사 일자", width: 16, type: "center" },
+        { header: "업체명", width: 34 },
+      ],
+      rows: missingRows,
+    },
+    {
+      name: "산출 기준",
+      heading: "산출 기준",
+      columns: [
+        { header: "구분", width: 18, type: "center" },
+        { header: "내용", width: 80 },
+      ],
+      rows: [
+        ["판매실적", "참가업체가 업체 전용 화면에서 행사일(10/23 · 10/24 · 10/25)별로 직접 입력한 판매 상품 건수와 총 판매금액입니다."],
+        ["입력률", "해당 일자에 판매실적을 제출한 업체 수 ÷ 전체 참가업체 수입니다."],
+        ["미입력", "아직 제출하지 않은 값입니다. 0건 · 0원으로 입력한 값과 구분하며, 합계에는 포함되지 않습니다."],
+        ["합계 행", "합계 행의 입력 업체는 3일 중 하루라도 입력한 업체 수이며, 입력 업체 평균은 판매금액 합계 ÷ 그 업체 수입니다."],
+        ["입력 업체 평균", "판매금액 합계 ÷ 해당 일자에 입력한 업체 수입니다."],
+        ["만족도조사", `10/25 제출 시 업체가 만족도조사 참여를 확인한 업체는 ${surveyDone} / ${companies.length}개입니다 (자체 확인 기준).`],
+        ["유의사항", "업체가 제출 후에도 수정할 수 있어 수치는 조회 시점의 최신 값입니다."],
+      ],
+    },
+  ];
+}
+
 export function buildExportDoc(type: ExportType, companies: AdminCompany[], baseUrl: string, sales: SalesEntry[] = []): ExportDoc {
   const sheets =
     type === "all"
@@ -329,12 +422,22 @@ export function buildExportDoc(type: ExportType, companies: AdminCompany[], base
           ? luckyDrawSheets(companies)
           : type === "sales"
             ? salesSheets(companies, sales)
-            : linkSheets(companies, baseUrl);
+            : type === "sales-report"
+              ? reportSheets(companies, sales)
+              : linkSheets(companies, baseUrl);
 
   const [title, subtitle] = TITLES[type];
   const submitted = companies.filter((c) => c.submission).length;
   let kpis: ExportDoc["kpis"];
-  if (type === "sales") {
+  if (type === "sales-report") {
+    const st = computeSalesStats(companies, sales);
+    const any = st.companiesEntered > 0;
+    kpis = [
+      ["입력 업체", `${st.companiesEntered} / ${st.companiesTotal}개 (${Math.round(pct(st.companiesEntered, st.companiesTotal) * 100)}%)`],
+      ["총 판매 건수", any ? `${st.items.toLocaleString("ko-KR")}건` : NOT_ENTERED],
+      ["총 판매금액", any ? `${st.amount.toLocaleString("ko-KR")}원` : NOT_ENTERED],
+    ];
+  } else if (type === "sales") {
     const known = new Set(companies.map((c) => c.id));
     const rows = sales.filter((e) => e.companyId && known.has(e.companyId));
     const items = rows.reduce((a, e) => a + e.items, 0);

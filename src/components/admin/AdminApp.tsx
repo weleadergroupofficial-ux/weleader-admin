@@ -5,7 +5,8 @@ import { api, ApiError, downloadFile, focusFirstError, navigate, replaceUrl } fr
 import { formatDateTime, formatNumber, formatWon, giftTotal, submissionGiftSummary } from "@/lib/calc";
 import type { AdminCompany, AdminOverview, AuditLog, FieldErrors, Submission, SubmissionDraft } from "@/lib/types";
 import { draftFromSubmission, draftToPayload, validateSubmission } from "@/lib/validation";
-import { EVENT_DAYS, type SalesEntry } from "@/lib/event";
+import { EVENT_DAYS, todayKst, type SalesEntry } from "@/lib/event";
+import { computeSalesStats, pctText, type SalesStats } from "@/lib/salesStats";
 import { SubmissionEditor } from "../SubmissionEditor";
 import { SubmissionSummary } from "../SubmissionSummary";
 import { Spinner, Wordmark } from "../ui/fields";
@@ -70,6 +71,133 @@ function useAdminData() {
     };
   }, [reload]);
   return { data, error, reload };
+}
+
+
+function useSales() {
+  const [rows, setRows] = useState<SalesEntry[] | null>(null);
+  const [error, setError] = useState("");
+  const load = useCallback(async () => {
+    try {
+      setRows(await api<SalesEntry[]>("/api/admin/sales"));
+      setError("");
+    } catch (e) {
+      // 판매실적 DB 설정 전이어도 대시보드 나머지는 정상 동작해야 하므로 조용히 표시만 합니다.
+      setError(e instanceof Error ? e.message : "판매실적을 불러오지 못했습니다.");
+    }
+  }, []);
+  useEffect(() => {
+    load();
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 30000);
+    return () => clearInterval(t);
+  }, [load]);
+  return { rows, error, reload: load };
+}
+
+function SalesChips({ id, stats }: { id: string; stats: SalesStats }) {
+  const last = EVENT_DAYS[EVENT_DAYS.length - 1].date;
+  return (
+    <span className="sales-chips">
+      {EVENT_DAYS.map((d) => {
+        const e = stats.get(id, d.date);
+        return (
+          <span key={d.date} className={`sales-chip ${e ? "done" : "todo"}`} title={`${d.short} ${e ? "입력 완료" : "미입력"}`}>
+            {d.short.slice(3)}일 {e ? "✓" : "–"}
+          </span>
+        );
+      })}
+      {stats.has(id, last) && !stats.get(id, last)?.surveyDone && (
+        <span className="sales-chip warn" title="10/25 만족도조사 미완료">
+          설문 ✕
+        </span>
+      )}
+    </span>
+  );
+}
+
+function SalesProgress({ stats, loaded, error, notify }: { stats: SalesStats; loaded: boolean; error: string; notify: Ctx["notify"] }) {
+  const today = todayKst();
+  const initial = EVENT_DAYS.find((d) => d.date === today)?.date ?? EVENT_DAYS.find((d) => stats.days.find((x) => x.date === d.date)?.missing.length)?.date ?? EVENT_DAYS[0].date;
+  const [sel, setSel] = useState<string>(initial);
+  const day = stats.days.find((d) => d.date === sel) ?? stats.days[0];
+
+  if (error && !loaded) {
+    return (
+      <div className="panel sales-progress">
+        <div className="panel-head">
+          <h2>판매실적 입력 현황</h2>
+        </div>
+        <div className="notice notice-error">{error}</div>
+      </div>
+    );
+  }
+
+  async function copyReminder() {
+    const wd = EVENT_DAYS.find((d) => d.date === day.date)?.weekday ?? "";
+    const text = [
+      `[BEAUTY WAVE in INCHEON 2026] ${day.short}(${wd}) 판매실적 입력 안내`,
+      day.missing.length ? `아직 입력하지 않으신 업체: ${day.missing.map((c) => c.name).join(", ")}` : "모든 업체가 입력을 마쳤습니다.",
+      "참가업체 접속 링크에서 업체명을 선택하고 담당자 휴대폰 뒷 4자리를 입력한 뒤 [행사 판매실적 입력하기]를 눌러 판매 상품 건수와 총 금액을 입력해 주세요.",
+      window.location.origin,
+      "운영팀 : 주식회사 웰리더",
+    ].join("\n");
+    const ok = await copyText(text);
+    notify(ok ? "미입력 업체 안내문을 복사했습니다. 단톡방에 붙여넣으세요." : "복사하지 못했습니다.", !ok);
+  }
+
+  return (
+    <div className="panel sales-progress">
+      <div className="panel-head">
+        <h2>판매실적 입력 현황</h2>
+        <a className="link-btn small" href="/admin/sales">
+          판매실적 자세히 보기
+        </a>
+      </div>
+      <div className="sp-days" role="tablist">
+        {stats.days.map((d) => {
+          const full = d.total > 0 && d.entered === d.total;
+          return (
+            <button key={d.date} role="tab" aria-selected={d.date === day.date} className={`sp-day${d.date === day.date ? " on" : ""}`} onClick={() => setSel(d.date)}>
+              <span className="sp-d">
+                {d.short} ({d.weekday}){d.date === todayKst() && <em>오늘</em>}
+              </span>
+              <span className="sp-n">
+                {d.entered}
+                <small> / {d.total}곳</small>
+              </span>
+              <span className="progress" aria-label={`${d.short} 입력률 ${pctText(d.entered, d.total)}`}>
+                <span style={{ width: pctText(d.entered, d.total) }} />
+              </span>
+              <span className="sp-s">{full ? "전체 입력 완료" : `미입력 ${d.missing.length}곳`}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="sp-missing">
+        <div className="sp-missing-head">
+          <strong>
+            {day.short} 아직 입력하지 않은 업체 <span className="num">{day.missing.length}</span>곳
+          </strong>
+          <button className="btn btn-soft btn-sm" onClick={copyReminder} disabled={day.missing.length === 0}>
+            미입력 업체 안내문 복사
+          </button>
+        </div>
+        {day.missing.length === 0 ? (
+          <p className="muted small">모든 업체가 입력했습니다.</p>
+        ) : (
+          <div className="sp-names">
+            {day.missing.map((c) => (
+              <a key={c.id} className="sp-name" href={`/admin/companies/${c.id}`}>
+                {c.name}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function StatusBadge({ c }: { c: AdminCompany }) {
@@ -252,6 +380,8 @@ function Dashboard({ ctx }: { ctx: Ctx }) {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "done" | "todo">("all");
   const dl = useDownload(ctx.notify);
+  const sales = useSales();
+  const salesStats = useMemo(() => computeSalesStats(companies, sales.rows ?? []), [companies, sales.rows]);
 
   const total = companies.length;
   const submitted = companies.filter((c) => c.submission).length;
@@ -353,6 +483,8 @@ function Dashboard({ ctx }: { ctx: Ctx }) {
         </div>
       </div>
 
+      <SalesProgress stats={salesStats} loaded={sales.rows !== null} error={sales.error} notify={ctx.notify} />
+
       <div className="panel">
         <div className="panel-head">
           <div>
@@ -408,6 +540,7 @@ function Dashboard({ ctx }: { ctx: Ctx }) {
                   <th className="c">순번</th>
                   <th>업체명</th>
                   <th className="c">제출 여부</th>
+                  <th>판매실적 (10/23~25)</th>
                   <th className="r">대표 판매상품 수</th>
                   <th className="c">럭키드로우</th>
                   <th className="r">럭키드로우 수량</th>
@@ -436,6 +569,7 @@ function Dashboard({ ctx }: { ctx: Ctx }) {
                       <td className="c">
                         <StatusBadge c={c} />
                       </td>
+                      <td>{sales.rows ? <SalesChips id={c.id} stats={salesStats} /> : <span className="muted">-</span>}</td>
                       <td className="r">{s ? `${s.products.length}개` : "-"}</td>
                       <td className="c">{s ? (s.luckyDrawProvided ? "제공" : "미제공") : "-"}</td>
                       <td className="r">{s?.luckyDrawProvided ? `${formatNumber(g.quantity)}개` : "-"}</td>
@@ -457,7 +591,7 @@ function Dashboard({ ctx }: { ctx: Ctx }) {
                 })}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={8}>
+                    <td colSpan={9}>
                       <div className="empty">조건에 맞는 업체가 없습니다.</div>
                     </td>
                   </tr>
@@ -1202,6 +1336,7 @@ function Downloads({ ctx }: { ctx: Ctx }) {
     ["price-board", "가격 안내판 제작용 데이터", "제출 업체의 상품명·정상가·할인가·할인 금액·할인율·샘플·추가 혜택을 상품 단위로 정리합니다."],
     ["lucky-draw", "럭키드로우 경품 관리 데이터", "경품별 수량·정상가·총금액과 업체별 합계, 전체 합계를 담습니다."],
     ["sales", "일자별 판매실적", "10/23·24·25 업체별 판매 건수·금액, 합계, 10/25 만족도조사 여부와 입력 내역을 담습니다."],
+    ["sales-report", "판매실적 성과 리포트", "일자별 입력률·판매 건수·금액, 상위 업체 TOP10, 미입력 업체, 산출 기준을 보고용으로 정리합니다. 주최·주관·운영 표기가 들어갑니다."],
     ["links", "업체별 제출 링크 목록", "업체명과 전용 제출 링크, 현재 제출 여부를 담습니다. 링크 일괄 안내에 사용하세요."],
   ];
   return (
@@ -1267,6 +1402,7 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
     return m;
   }, [rows]);
 
+  const stats = useMemo(() => computeSalesStats(ctx.data.companies, rows ?? []), [ctx.data.companies, rows]);
   const companies = ctx.data.companies.filter((c) => !q.trim() || c.name.toLowerCase().includes(q.trim().toLowerCase()));
   const totals = EVENT_DAYS.map((d) => {
     let items = 0;
@@ -1300,6 +1436,9 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
           </button>
           <button className="btn btn-soft btn-sm" disabled={dl.busy !== null} onClick={() => dl.run("sales", "pdf")}>
             {dl.busy === "sales.pdf" ? "만드는 중…" : "PDF 내려받기"}
+          </button>
+          <button className="btn btn-ghost btn-sm" disabled={dl.busy !== null} onClick={() => dl.run("sales-report", "pdf")}>
+            {dl.busy === "sales-report.pdf" ? "만드는 중…" : "성과 리포트 PDF"}
           </button>
         </div>
       </div>
@@ -1335,6 +1474,8 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
               </div>
             </div>
           </div>
+
+          <SalesProgress stats={stats} loaded error="" notify={ctx.notify} />
 
           <div className="panel">
             <div className="panel-head">
@@ -1381,10 +1522,10 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
                       }
                       return [
                         <td key={`${d.date}i`} className="r num day-sep">
-                          {e ? formatNumber(e.items) : <span className="muted">-</span>}
+                          {e ? formatNumber(e.items) : <span className="muted">미입력</span>}
                         </td>,
                         <td key={`${d.date}a`} className="r num">
-                          {e ? formatNumber(e.amount) : <span className="muted">-</span>}
+                          {e ? formatNumber(e.amount) : <span className="muted">미입력</span>}
                         </td>,
                       ];
                     });
@@ -1395,13 +1536,13 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
                         <td>{c.name}</td>
                         {cells}
                         <td className="r num day-sep">
-                          <strong>{any ? formatNumber(ti) : "-"}</strong>
+                          {any ? <strong>{formatNumber(ti)}</strong> : <span className="muted">미입력</span>}
                         </td>
                         <td className="r num">
-                          <strong>{any ? formatNumber(ta) : "-"}</strong>
+                          {any ? <strong>{formatNumber(ta)}</strong> : <span className="muted">미입력</span>}
                         </td>
                         <td className="c">
-                          {last ? last.surveyDone ? <span className="status done">완료</span> : <span className="status todo">미완료</span> : <span className="muted">-</span>}
+                          {last ? last.surveyDone ? <span className="status done">완료</span> : <span className="status todo">미완료</span> : <span className="muted">미입력</span>}
                         </td>
                       </tr>
                     );

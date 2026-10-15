@@ -1672,3 +1672,114 @@ a.btn {
   color: var(--violet-deep);
   font-variant-numeric: tabular-nums;
 }
+
+/* ---- 판매실적 입력 현황 (대시보드 · 판매실적) ---- */
+.sales-chips {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+.sales-chip {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.sales-chip.done {
+  color: var(--ok);
+  background: var(--ok-bg);
+}
+.sales-chip.todo {
+  color: var(--muted);
+  background: var(--lilac-100);
+}
+.sales-chip.warn {
+  color: var(--warn);
+  background: var(--warn-bg);
+}
+.sales-progress {
+  margin-bottom: 20px;
+}
+.sp-days {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 4px 20px 0;
+}
+.sp-day {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+.sp-day.on {
+  border-color: var(--violet);
+  background: var(--lilac-100);
+}
+.sp-d {
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--muted);
+}
+.sp-d em {
+  font-style: normal;
+  margin-left: 6px;
+  font-size: 11.5px;
+  color: #fff;
+  background: var(--violet);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.sp-n {
+  font-size: 24px;
+  font-weight: 750;
+}
+.sp-n small {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.sp-s {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.sp-missing {
+  padding: 16px 20px 20px;
+}
+.sp-missing-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.sp-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sp-name {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+}
+@media (max-width: 640px) {
+  .sp-days {
+    grid-template-columns: 1fr;
+  }
+}
