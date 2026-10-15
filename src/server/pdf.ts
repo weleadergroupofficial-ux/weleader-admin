@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { deflateSync } from "node:zlib";
-import { BRAND, seoulStamp, type CellValue, type Column, type ExportDoc, type SheetSpec } from "./xlsx";
+import { BRAND, OPS_TEAM, seoulStamp, type CellValue, type Column, type ExportDoc, type SheetSpec } from "./xlsx";
 
 /**
  * 외부 라이브러리 없이 만드는 PDF 작성기 (A4 가로).
@@ -408,7 +408,7 @@ function cover(c: Ctx) {
   const lw = (c.logo.w / c.logo.h) * lh;
   put(c, `q ${n2(lw)} 0 0 ${n2(lh)} ${MX} ${n2(PH - TOP_FIRST - 6 - lh)} cm /Im1 Do Q`);
   text(c, c.reg, 8.5, PW - MX - 300, TOP_FIRST + 18, `생성 ${c.generated}`, BRAND.muted, "right", 300);
-  text(c, c.reg, 8.5, PW - MX - 300, TOP_FIRST + 31, "운영사무국 · 관리자 자료", BRAND.muted, "right", 300);
+  text(c, c.reg, 8.5, PW - MX - 300, TOP_FIRST + 31, OPS_TEAM, BRAND.muted, "right", 300);
 
   let y = TOP_FIRST + 6 + lh + 30;
   text(c, c.bold, 25, MX, y, c.doc.title, BRAND.deep);
@@ -436,7 +436,7 @@ function footer(c: Ctx, page: number, total: number, ops: string[]) {
   const saved = c.ops;
   c.ops = ops;
   hline(c, MX, PW - MX, PH - 28, BRAND.line, 0.6);
-  text(c, c.reg, 7.5, MX, PH - 16, "BEAUTY WAVE in INCHEON 2026 · 운영사무국", BRAND.muted);
+  text(c, c.reg, 7.5, MX, PH - 16, `BEAUTY WAVE in INCHEON 2026 · ${OPS_TEAM}`, BRAND.muted);
   text(c, c.reg, 7.5, PW - MX - 200, PH - 16, `${page} / ${total}`, BRAND.muted, "right", 200);
   c.ops = saved;
 }
@@ -565,6 +565,6 @@ export async function buildPdf(doc: ExportDoc, origin: string): Promise<Uint8Arr
   }
   pdf.set(pagesId, `<< /Type /Pages /Count ${pageIds.length} /Kids [${pageIds.map((i) => `${i} 0 R`).join(" ")}] >>`);
   pdf.set(catalog, `<< /Type /Catalog /Pages ${pagesId} 0 R /PageLayout /SinglePage >>`);
-  const info = pdf.add(`<< /Title <${utf16hex(doc.title)}> /Author <${utf16hex("BEAUTY WAVE in INCHEON 2026 운영사무국")}> /Producer (BEAUTY WAVE) >>`);
+  const info = pdf.add(`<< /Title <${utf16hex(doc.title)}> /Author <${utf16hex(`BEAUTY WAVE in INCHEON 2026 ${OPS_TEAM}`)}> /Producer (BEAUTY WAVE) >>`);
   return pdf.build(catalog, info);
 }

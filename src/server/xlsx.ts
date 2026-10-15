@@ -195,7 +195,7 @@ function sheetXml(st: Styles, doc: ExportDoc, spec: SheetSpec, generated: string
   const kpiXf = st.xf({ font: FONT.kpi, h: "left" });
   const headXf = st.xf({ font: FONT.head, fill: FILL.head, border: BORDER.head, h: "center", wrap: true });
 
-  const subtitle = [doc.subtitle, `생성 ${generated}`].filter(Boolean).join("   ·   ");
+  const subtitle = [doc.subtitle, `생성 ${generated}`, OPS_TEAM].filter(Boolean).join("   ·   ");
   const kpi = (doc.kpis ?? []).map(([k, v]) => `${k} ${v}`).join("     |     ");
 
   const rows: string[] = [];
@@ -242,7 +242,7 @@ function sheetXml(st: Styles, doc: ExportDoc, spec: SheetSpec, generated: string
     `<printOptions horizontalCentered="1"/>` +
     `<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.7" header="0.3" footer="0.3"/>` +
     `<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>` +
-    `<headerFooter><oddFooter>&amp;L&amp;8BEAUTY WAVE in INCHEON 2026 · 운영사무국&amp;R&amp;8&amp;P / &amp;N</oddFooter></headerFooter>` +
+    `<headerFooter><oddFooter>&amp;L&amp;8BEAUTY WAVE in INCHEON 2026 · 운영팀 : 주식회사 웰리더&amp;R&amp;8&amp;P / &amp;N</oddFooter></headerFooter>` +
     `</worksheet>`
   );
 }
@@ -269,6 +269,7 @@ function seoulStamp(d = new Date()): string {
   return `${g("year")}.${g("month")}.${g("day")} ${g("hour")}:${g("minute")}`;
 }
 export { seoulStamp };
+export const OPS_TEAM = "운영팀 : 주식회사 웰리더";
 
 export async function buildXlsx(doc: ExportDoc): Promise<Uint8Array> {
   const sheets = doc.sheets;
