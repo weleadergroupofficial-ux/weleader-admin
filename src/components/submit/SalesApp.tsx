@@ -129,9 +129,7 @@ export default function SalesApp({ token }: { token: string }) {
         <header className="sb-masthead">
           <Wordmark />
           <h1 className="sb-title">
-            행사 기간 판매실적
-            <br />
-            입력
+            행사 기간 판매실적 입력
           </h1>
           {state && (
             <div className="company-chip">
