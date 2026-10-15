@@ -15,6 +15,17 @@ import { BRAND, OPS_TEAM, seoulStamp, type CellValue, type Column, type ExportDo
 
 const cache = new Map<string, Buffer>();
 
+// 폰트(1.5MB)를 요청마다 다시 압축하면 CPU 를 오래 쓰고 다른 요청이 줄줄이 밀리므로, 한 번만 압축해 재사용합니다.
+const deflatedCache = new WeakMap<Uint8Array, Buffer>();
+function deflatedFont(data: Uint8Array): Buffer {
+  let hit = deflatedCache.get(data);
+  if (!hit) {
+    hit = deflateSync(data, { level: 6 });
+    deflatedCache.set(data, hit);
+  }
+  return hit;
+}
+
 async function asset(name: string, origin: string): Promise<Buffer> {
   const hit = cache.get(name);
   if (hit) return hit;
@@ -223,7 +234,7 @@ class FontRef {
 
   write(pdf: Pdf, id: number) {
     const f = this.font;
-    const file = pdf.stream("/Subtype /OpenType /Filter /FlateDecode", deflateSync(f.data, { level: 6 }));
+    const file = pdf.stream("/Subtype /OpenType /Filter /FlateDecode", deflatedFont(f.data));
     const k = 1000 / f.unitsPerEm;
     const desc = pdf.add(
       `<< /Type /FontDescriptor /FontName /${f.name} /Flags 4 /FontBBox [${f.bbox.map((v) => Math.round(v * k)).join(" ")}] /ItalicAngle 0 ` +

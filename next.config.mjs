@@ -10,6 +10,10 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // PDF 폰트·로고를 서버 함수 안에 함께 넣어, 요청마다 네트워크로 내려받지 않고 바로 읽게 합니다.
+  outputFileTracingIncludes: {
+    "/api/[...path]": ["./public/pdf/**/*"],
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
