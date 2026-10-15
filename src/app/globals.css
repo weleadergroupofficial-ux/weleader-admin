@@ -1495,3 +1495,180 @@ a {
   letter-spacing: 0.3em;
   max-width: 200px;
 }
+
+/* ---------- 업체 전용: 탭 · 판매실적 ---------- */
+.co-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 22px 0 6px;
+  padding: 5px;
+  background: var(--lilac-100);
+  border-radius: 14px;
+}
+.co-tabs a {
+  flex: 1;
+  text-align: center;
+  padding: 11px 8px;
+  border-radius: 10px;
+  font-weight: 650;
+  font-size: 15px;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.co-tabs a.on {
+  background: var(--paper);
+  color: var(--violet-deep);
+  box-shadow: var(--shadow-soft);
+}
+
+.day-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 20px 0 0;
+}
+.day-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 6px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  cursor: pointer;
+  color: var(--ink-2);
+}
+.day-tab .d {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.day-tab .w {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.day-tab .st {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 650;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--lilac-100);
+  color: var(--muted);
+}
+.day-tab.done .st {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.day-tab.on {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--violet) 14%, transparent);
+}
+.sales-form {
+  margin-top: 14px;
+}
+.survey-box {
+  margin-top: 22px;
+  padding: 18px 18px 16px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--lilac-300);
+  background: var(--lilac-50);
+}
+.survey-box p {
+  margin: 8px 0 12px;
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+.survey-box.done {
+  border-color: #bfe3d2;
+  background: var(--ok-bg);
+}
+.survey-box.invalid {
+  border-color: var(--danger);
+}
+.survey-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.survey-head .badge {
+  background: var(--violet);
+  color: #fff;
+  border-radius: 999px;
+  padding: 1px 10px;
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.survey-box .survey-ok {
+  color: var(--ok);
+  font-weight: 650;
+  margin-bottom: 0;
+}
+.survey-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.survey-check input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--violet);
+}
+.survey-check.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.sales-sum .data-table th,
+.sales-sum .data-table td {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+a.btn {
+  text-decoration: none;
+}
+@media (max-width: 520px) {
+  .day-tab .d {
+    font-size: 17px;
+  }
+}
+
+/* ---------- 관리자: 판매실적 · PDF 버튼 ---------- */
+.dl-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sales-admin td.r,
+.sales-admin th.r {
+  text-align: right;
+}
+.sales-admin .day-sep {
+  border-left: 2px solid var(--lilac-200);
+}
+.sales-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.sales-kpi {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+}
+.sales-kpi .k {
+  font-size: 13px;
+  color: var(--muted);
+}
+.sales-kpi .v {
+  font-size: 22px;
+  font-weight: 750;
+  color: var(--violet-deep);
+  font-variant-numeric: tabular-nums;
+}

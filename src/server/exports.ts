@@ -1,14 +1,24 @@
 import { discountRate, giftTotal, submissionGiftSummary } from "@/lib/calc";
 import type { AdminCompany } from "@/lib/types";
-import { buildXlsx, colLetter, type SheetSpec } from "./xlsx";
+import { EVENT_DAYS, type SalesEntry } from "@/lib/event";
+import { colLetter, FIRST_ROW, type ExportDoc, type SheetSpec } from "./xlsx";
 
-export type ExportType = "all" | "price-board" | "lucky-draw" | "links";
+export type ExportType = "all" | "price-board" | "lucky-draw" | "links" | "sales";
 
 export const EXPORT_FILES: Record<ExportType, string> = {
   all: "전체_참가업체_제출정보",
   "price-board": "부스별_가격안내판_제작용",
   "lucky-draw": "럭키드로우_경품관리",
   links: "업체별_제출링크",
+  sales: "일자별_판매실적",
+};
+
+const TITLES: Record<ExportType, [string, string]> = {
+  all: ["전체 참가업체 제출 정보", "업체별 제출 현황 · 대표 판매상품 · 럭키드로우 경품"],
+  "price-board": ["부스별 가격 안내판 제작용 데이터", "상품명 · 정상가 · 행사 할인가 · 할인율"],
+  "lucky-draw": ["럭키드로우 경품 관리", "경품 목록 및 업체별 합계"],
+  links: ["업체별 제출 링크", "참가업체 전용 제출 링크 및 제출 여부"],
+  sales: ["일자별 판매실적", "행사 기간 10/23 · 10/24 · 10/25 업체별 판매실적"],
 };
 
 const d = (iso: string | null | undefined) => (iso ? new Date(iso) : null);
@@ -17,25 +27,25 @@ const rate = (r: number, e: number) => {
   return v == null ? null : v / 100;
 };
 const sum = (col: number, rows: number, value: number) =>
-  rows > 0 ? { formula: `SUM(${colLetter(col)}2:${colLetter(col)}${rows + 1})`, value } : value;
+  rows > 0 ? { formula: `SUM(${colLetter(col)}${FIRST_ROW}:${colLetter(col)}${FIRST_ROW + rows - 1})`, value } : value;
 
 function allSheets(companies: AdminCompany[]): SheetSpec[] {
   const status: SheetSpec = {
     name: "업체별 제출 현황",
     columns: [
-      { header: "순번", width: 6, type: "number" },
+      { header: "순번", width: 6, type: "center" },
       { header: "등록 업체명", width: 24 },
       { header: "제출 업체명", width: 24 },
-      { header: "제출 여부", width: 10 },
+      { header: "제출 여부", width: 10, type: "center" },
       { header: "대표 판매상품 수", width: 10, type: "number" },
-      { header: "럭키드로우 제공 여부", width: 12 },
+      { header: "럭키드로우 제공 여부", width: 12, type: "center" },
       { header: "경품 종류 수", width: 10, type: "number" },
       { header: "경품 총수량", width: 11, type: "number" },
       { header: "경품 총금액(정상가 기준, 원)", width: 16, type: "number" },
       { header: "최초 제출일", width: 17, type: "datetime" },
       { header: "최종 수정일", width: 17, type: "datetime" },
-      { header: "최종 수정자", width: 10 },
-      { header: "수정 잠금", width: 9 },
+      { header: "최종 수정자", width: 10, type: "center" },
+      { header: "수정 잠금", width: 9, type: "center" },
     ],
     rows: companies.map((c, i) => {
       const s = c.submission;
@@ -78,7 +88,7 @@ function allSheets(companies: AdminCompany[]): SheetSpec[] {
     });
     if (s.luckyDrawProvided) {
       s.gifts.forEach((g, gi) => {
-        const rn = giftRows.length + 2;
+        const rn = giftRows.length + FIRST_ROW;
         giftRows.push([i + 1, s.companyName, gi + 1, g.name, g.quantity, g.unitPrice, { formula: `E${rn}*F${rn}`, value: giftTotal(g) }]);
       });
     }
@@ -87,14 +97,14 @@ function allSheets(companies: AdminCompany[]): SheetSpec[] {
   const products: SheetSpec = {
     name: "대표 판매상품",
     columns: [
-      { header: "업체 순번", width: 8, type: "number" },
+      { header: "업체 순번", width: 8, type: "center" },
       { header: "업체명", width: 24 },
       { header: "상품 번호", width: 8, type: "number" },
       { header: "대표 판매상품명", width: 30 },
       { header: "정상 판매가(원)", width: 13, type: "number" },
       { header: "행사 특별 할인가(원)", width: 13, type: "number" },
       { header: "할인율", width: 8, type: "percent" },
-      { header: "샘플 제공 여부", width: 12 },
+      { header: "샘플 제공 여부", width: 12, type: "center" },
       { header: "추가 이벤트 혜택", width: 36 },
     ],
     rows: productRows,
@@ -105,7 +115,7 @@ function allSheets(companies: AdminCompany[]): SheetSpec[] {
   const gifts: SheetSpec = {
     name: "럭키드로우 경품",
     columns: [
-      { header: "업체 순번", width: 8, type: "number" },
+      { header: "업체 순번", width: 8, type: "center" },
       { header: "업체명", width: 24 },
       { header: "경품 번호", width: 8, type: "number" },
       { header: "제공 상품명", width: 30 },
@@ -143,7 +153,7 @@ function priceBoardSheets(companies: AdminCompany[]): SheetSpec[] {
     {
       name: "가격 안내판",
       columns: [
-        { header: "업체 순번", width: 8, type: "number" },
+        { header: "업체 순번", width: 8, type: "center" },
         { header: "업체명", width: 24 },
         { header: "상품 번호", width: 8, type: "number" },
         { header: "상품명", width: 30 },
@@ -151,7 +161,7 @@ function priceBoardSheets(companies: AdminCompany[]): SheetSpec[] {
         { header: "행사 특별 할인가(원)", width: 13, type: "number" },
         { header: "할인 금액(원)", width: 12, type: "number" },
         { header: "할인율", width: 8, type: "percent" },
-        { header: "샘플", width: 10 },
+        { header: "샘플", width: 10, type: "center" },
         { header: "추가 이벤트 혜택", width: 36 },
       ],
       rows,
@@ -166,7 +176,7 @@ function luckyDrawSheets(companies: AdminCompany[]): SheetSpec[] {
     const s = c.submission;
     if (!s || !s.luckyDrawProvided) return;
     s.gifts.forEach((g) => {
-      const rn = items.length + 2;
+      const rn = items.length + FIRST_ROW;
       items.push([s.companyName, g.name, g.quantity, g.unitPrice, { formula: `C${rn}*D${rn}`, value: giftTotal(g) }]);
     });
     const sm = submissionGiftSummary(s);
@@ -206,17 +216,110 @@ function linkSheets(companies: AdminCompany[], baseUrl: string): SheetSpec[] {
     {
       name: "업체별 제출 링크",
       columns: [
-        { header: "순번", width: 6, type: "number" },
+        { header: "순번", width: 6, type: "center" },
         { header: "업체명", width: 24 },
         { header: "전용 제출 링크", width: 70 },
-        { header: "제출 여부", width: 10 },
+        { header: "제출 여부", width: 10, type: "center" },
       ],
       rows: companies.map((c, i) => [i + 1, c.name, `${baseUrl}/s/${c.token}`, c.submission ? "제출 완료" : "미제출"]),
     },
   ];
 }
 
-export async function buildExport(type: ExportType, companies: AdminCompany[], baseUrl: string) {
+function salesSheets(companies: AdminCompany[], sales: SalesEntry[]): SheetSpec[] {
+  const by = new Map<string, SalesEntry>();
+  for (const e of sales) if (e.companyId) by.set(`${e.companyId}|${e.day}`, e);
+
+  const rows: SheetSpec["rows"] = [];
+  const totals = { items: EVENT_DAYS.map(() => 0), amount: EVENT_DAYS.map(() => 0) };
+  companies.forEach((c, i) => {
+    const row: SheetSpec["rows"][number] = [i + 1, c.name];
+    let ti = 0;
+    let ta = 0;
+    EVENT_DAYS.forEach((d, di) => {
+      const e = by.get(`${c.id}|${d.date}`);
+      row.push(e ? e.items : null, e ? e.amount : null);
+      if (e) {
+        totals.items[di] += e.items;
+        totals.amount[di] += e.amount;
+        ti += e.items;
+        ta += e.amount;
+      }
+    });
+    const last = by.get(`${c.id}|${EVENT_DAYS[EVENT_DAYS.length - 1].date}`);
+    const entered = EVENT_DAYS.filter((d) => by.has(`${c.id}|${d.date}`)).length;
+    row.push(entered ? ti : null, entered ? ta : null, `${entered}/${EVENT_DAYS.length}일`, last ? (last.surveyDone ? "완료" : "미완료") : "");
+    rows.push(row);
+  });
+
+  const columns: SheetSpec["columns"] = [{ header: "순번", width: 6, type: "center" }, { header: "업체명", width: 26 }];
+  for (const d of EVENT_DAYS) {
+    columns.push({ header: `${d.short} 판매 건수`, width: 11, type: "number" }, { header: `${d.short} 판매금액(원)`, width: 16, type: "number" });
+  }
+  columns.push(
+    { header: "총 판매 건수", width: 12, type: "number" },
+    { header: "총 판매금액(원)", width: 17, type: "number" },
+    { header: "입력 일수", width: 10, type: "center" },
+    { header: "10/25 만족도조사", width: 13, type: "center" },
+  );
+  const sumRow: SheetSpec["rows"][number] = ["", "전체 합계"];
+  let gi = 0;
+  let ga = 0;
+  EVENT_DAYS.forEach((_, di) => {
+    sumRow.push(sum(2 + di * 2, rows.length, totals.items[di]), sum(3 + di * 2, rows.length, totals.amount[di]));
+    gi += totals.items[di];
+    ga += totals.amount[di];
+  });
+  const base = 2 + EVENT_DAYS.length * 2;
+  sumRow.push(sum(base, rows.length, gi), sum(base + 1, rows.length, ga), "", "");
+
+  const detail: SheetSpec["rows"] = [];
+  const nameOf = new Map(companies.map((c) => [c.id, c.name]));
+  const order = new Map(companies.map((c, i) => [c.id, i]));
+  [...sales]
+    .filter((e) => e.companyId && nameOf.has(e.companyId))
+    .sort((a, b) => a.day.localeCompare(b.day) || (order.get(a.companyId!) ?? 0) - (order.get(b.companyId!) ?? 0))
+    .forEach((e) => {
+      const day = EVENT_DAYS.find((d) => d.date === e.day);
+      detail.push([
+        day ? `${day.label} (${day.weekday})` : e.day,
+        nameOf.get(e.companyId!) ?? "",
+        e.items,
+        e.amount,
+        day?.last ? (e.surveyDone ? "완료" : "미완료") : "",
+        d(e.firstSubmittedAt),
+        d(e.updatedAt),
+        e.revision > 1 ? `${e.revision - 1}회 수정` : "",
+      ]);
+    });
+
+  return [
+    {
+      name: "일자별 판매실적",
+      heading: "업체별 · 일자별 판매실적",
+      columns,
+      rows,
+      totals: ["", ...sumRow.slice(1)],
+    },
+    {
+      name: "입력 내역",
+      heading: "입력 내역 (일자순)",
+      columns: [
+        { header: "행사 일자", width: 16, type: "center" },
+        { header: "업체명", width: 26 },
+        { header: "판매 건수", width: 11, type: "number" },
+        { header: "판매금액(원)", width: 16, type: "number" },
+        { header: "만족도조사", width: 12, type: "center" },
+        { header: "최초 입력", width: 17, type: "datetime" },
+        { header: "최종 수정", width: 17, type: "datetime" },
+        { header: "비고", width: 12, type: "center" },
+      ],
+      rows: detail,
+    },
+  ];
+}
+
+export function buildExportDoc(type: ExportType, companies: AdminCompany[], baseUrl: string, sales: SalesEntry[] = []): ExportDoc {
   const sheets =
     type === "all"
       ? allSheets(companies)
@@ -224,17 +327,46 @@ export async function buildExport(type: ExportType, companies: AdminCompany[], b
         ? priceBoardSheets(companies)
         : type === "lucky-draw"
           ? luckyDrawSheets(companies)
-          : linkSheets(companies, baseUrl);
-  return buildXlsx(sheets);
+          : type === "sales"
+            ? salesSheets(companies, sales)
+            : linkSheets(companies, baseUrl);
+
+  const [title, subtitle] = TITLES[type];
+  const submitted = companies.filter((c) => c.submission).length;
+  let kpis: ExportDoc["kpis"];
+  if (type === "sales") {
+    const known = new Set(companies.map((c) => c.id));
+    const rows = sales.filter((e) => e.companyId && known.has(e.companyId));
+    const items = rows.reduce((a, e) => a + e.items, 0);
+    const amount = rows.reduce((a, e) => a + e.amount, 0);
+    const entered = new Set(rows.map((e) => e.companyId)).size;
+    kpis = [
+      ["입력 업체", `${entered} / ${companies.length}개`],
+      ["총 판매 건수", `${items.toLocaleString("ko-KR")}건`],
+      ["총 판매금액", `${amount.toLocaleString("ko-KR")}원`],
+    ];
+  } else {
+    kpis = [
+      ["참가업체", `${companies.length}개`],
+      ["제출 완료", `${submitted}개`],
+      ["미제출", `${companies.length - submitted}개`],
+    ];
+  }
+  return { title, subtitle: `BEAUTY WAVE in INCHEON 2026 · ${subtitle}`, kpis, sheets };
 }
 
-export async function buildImportTemplate() {
-  return buildXlsx([
-    {
-      name: "업체 명단",
-      columns: [{ header: "업체명", width: 30 }],
-      // '○○' 가 들어간 예시 행과 '업체명' 제목 행은 등록 시 자동으로 건너뜁니다.
-      rows: [["주식회사 ○○뷰티"]],
-    },
-  ]);
+export function buildImportTemplate(): ExportDoc {
+  return {
+    plain: true,
+    title: "참가업체 일괄 등록 양식",
+    subtitle: "A열에 업체명을 한 줄에 하나씩 입력한 뒤 업로드하세요 (예시 행은 자동으로 건너뜁니다)",
+    sheets: [
+      {
+        name: "업체 명단",
+        columns: [{ header: "업체명", width: 34 }],
+        // '○○' 가 들어간 예시 행과 '업체명' 제목 행은 등록 시 자동으로 건너뜁니다.
+        rows: [["주식회사 ○○뷰티"]],
+      },
+    ],
+  };
 }

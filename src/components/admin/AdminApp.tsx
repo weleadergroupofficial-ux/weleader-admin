@@ -5,11 +5,12 @@ import { api, ApiError, downloadFile, focusFirstError, navigate, replaceUrl } fr
 import { formatDateTime, formatNumber, formatWon, giftTotal, submissionGiftSummary } from "@/lib/calc";
 import type { AdminCompany, AdminOverview, AuditLog, FieldErrors, Submission, SubmissionDraft } from "@/lib/types";
 import { draftFromSubmission, draftToPayload, validateSubmission } from "@/lib/validation";
+import { EVENT_DAYS, type SalesEntry } from "@/lib/event";
 import { SubmissionEditor } from "../SubmissionEditor";
 import { SubmissionSummary } from "../SubmissionSummary";
 import { Spinner, Wordmark } from "../ui/fields";
 
-export type AdminView = "dashboard" | "companies" | "company" | "lucky-draw" | "downloads" | "logs";
+export type AdminView = "dashboard" | "companies" | "company" | "lucky-draw" | "sales" | "downloads" | "logs";
 
 // ---------------------------------------------------------------------
 // 공용 도구
@@ -114,7 +115,8 @@ export default function AdminApp({ view, companyId, edit }: { view: AdminView; c
     ["/admin", "대시보드", ["dashboard"]],
     ["/admin/companies", "업체 · 링크 관리", ["companies", "company"], data ? String(companies.length) : undefined],
     ["/admin/lucky-draw", "럭키드로우 관리", ["lucky-draw"]],
-    ["/admin/downloads", "엑셀 다운로드", ["downloads"]],
+    ["/admin/sales", "판매실적", ["sales"]],
+    ["/admin/downloads", "다운로드 (엑셀·PDF)", ["downloads"]],
     ["/admin/logs", "작업 이력", ["logs"]],
   ];
 
@@ -173,6 +175,7 @@ export default function AdminApp({ view, companyId, edit }: { view: AdminView; c
             {view === "companies" && <Companies ctx={ctx} />}
             {view === "company" && companyId && <CompanyDetail ctx={ctx} id={companyId} startEditing={!!edit} />}
             {view === "lucky-draw" && <LuckyDraw ctx={ctx} />}
+            {view === "sales" && <SalesAdmin ctx={ctx} />}
             {view === "downloads" && <Downloads ctx={ctx} />}
             {view === "logs" && <Logs ctx={ctx} />}
           </>
@@ -227,10 +230,10 @@ interface Ctx {
 
 function useDownload(notify: Ctx["notify"]) {
   const [busy, setBusy] = useState<string | null>(null);
-  const run = async (type: string) => {
-    setBusy(type);
+  const run = async (type: string, format: "xlsx" | "pdf" = "xlsx") => {
+    setBusy(format === "pdf" ? `${type}.pdf` : type);
     try {
-      await downloadFile(type === "template" ? "/api/admin/template" : `/api/admin/export/${type}`);
+      await downloadFile(type === "template" ? "/api/admin/template" : `/api/admin/export/${type}${format === "pdf" ? "?format=pdf" : ""}`);
     } catch (e) {
       notify(e instanceof Error ? e.message : "다운로드하지 못했습니다.", true);
     } finally {
@@ -287,6 +290,9 @@ function Dashboard({ ctx }: { ctx: Ctx }) {
           </button>
           <button className="btn btn-primary btn-sm" disabled={dl.busy === "all"} onClick={() => dl.run("all")}>
             {dl.busy === "all" ? "만드는 중…" : "전체 데이터 엑셀"}
+          </button>
+          <button className="btn btn-soft btn-sm" disabled={dl.busy === "all.pdf"} onClick={() => dl.run("all", "pdf")}>
+            {dl.busy === "all.pdf" ? "만드는 중…" : "전체 데이터 PDF"}
           </button>
         </div>
       </div>
@@ -820,6 +826,8 @@ const ACTION_LABEL: Record<string, string> = {
   company_deleted: "업체 삭제",
   token_regenerated: "링크 재발급",
   settings_updated: "제출 접수 설정 변경",
+  sales_created: "판매실적 최초 제출",
+  sales_updated: "판매실적 수정",
 };
 
 function CompanyDetail({ ctx, id, startEditing }: { ctx: Ctx; id: string; startEditing: boolean }) {
@@ -1057,6 +1065,9 @@ function LuckyDraw({ ctx }: { ctx: Ctx }) {
           <button className="btn btn-primary btn-sm" disabled={dl.busy === "lucky-draw"} onClick={() => dl.run("lucky-draw")}>
             {dl.busy === "lucky-draw" ? "만드는 중…" : "경품 관리 엑셀"}
           </button>
+          <button className="btn btn-soft btn-sm" disabled={dl.busy === "lucky-draw.pdf"} onClick={() => dl.run("lucky-draw", "pdf")}>
+            {dl.busy === "lucky-draw.pdf" ? "만드는 중…" : "경품 관리 PDF"}
+          </button>
         </div>
       </div>
       <div className="stats" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
@@ -1187,17 +1198,21 @@ function LuckyDraw({ ctx }: { ctx: Ctx }) {
 function Downloads({ ctx }: { ctx: Ctx }) {
   const dl = useDownload(ctx.notify);
   const cards: Array<[string, string, string]> = [
-    ["all", "전체 참가업체 제출 정보", "업체별 제출 현황, 대표 판매상품, 럭키드로우 경품을 시트별로 나눠 담습니다. 미제출 업체도 포함됩니다."],
+    ["all", "전체 참가업체 제출 정보", "업체별 제출 현황, 대표 판매상품, 럭키드로우 경품을 시트(쪽)별로 나눠 담습니다. 미제출 업체도 포함됩니다."],
     ["price-board", "가격 안내판 제작용 데이터", "제출 업체의 상품명·정상가·할인가·할인 금액·할인율·샘플·추가 혜택을 상품 단위로 정리합니다."],
-    ["lucky-draw", "럭키드로우 경품 관리 데이터", "경품별 수량·정상가·총금액과 업체별 합계, 전체 합계(합계 수식 포함)를 담습니다."],
+    ["lucky-draw", "럭키드로우 경품 관리 데이터", "경품별 수량·정상가·총금액과 업체별 합계, 전체 합계를 담습니다."],
+    ["sales", "일자별 판매실적", "10/23·24·25 업체별 판매 건수·금액, 합계, 10/25 만족도조사 여부와 입력 내역을 담습니다."],
     ["links", "업체별 제출 링크 목록", "업체명과 전용 제출 링크, 현재 제출 여부를 담습니다. 링크 일괄 안내에 사용하세요."],
   ];
   return (
     <>
       <div className="ad-top">
         <div>
-          <h1>엑셀 다운로드</h1>
-          <p>내려받는 시점의 최신 데이터로 만듭니다. 금액·수량은 숫자 형식(천 단위 쉼표)으로 저장되어 바로 계산할 수 있습니다.</p>
+          <h1>다운로드 (엑셀 · PDF)</h1>
+          <p>
+            내려받는 시점의 최신 데이터로 만듭니다. 엑셀은 금액·수량이 숫자 형식(천 단위 쉼표)이라 바로 계산할 수 있고, PDF는 보고·인쇄용으로 같은 내용을
+            행사 디자인에 맞춰 정리합니다.
+          </p>
         </div>
       </div>
       <div className="dl-grid">
@@ -1205,12 +1220,221 @@ function Downloads({ ctx }: { ctx: Ctx }) {
           <div className="dl-card" key={type}>
             <h3>{title}</h3>
             <p>{desc}</p>
-            <button className="btn btn-primary btn-sm" disabled={dl.busy === type} onClick={() => dl.run(type)}>
-              {dl.busy === type ? "만드는 중…" : "엑셀 내려받기"}
-            </button>
+            <div className="dl-actions">
+              <button className="btn btn-primary btn-sm" disabled={dl.busy !== null} onClick={() => dl.run(type)}>
+                {dl.busy === type ? "만드는 중…" : "엑셀 내려받기"}
+              </button>
+              <button className="btn btn-soft btn-sm" disabled={dl.busy !== null} onClick={() => dl.run(type, "pdf")}>
+                {dl.busy === `${type}.pdf` ? "만드는 중…" : "PDF 내려받기"}
+              </button>
+            </div>
           </div>
         ))}
       </div>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------
+// 판매실적
+// ---------------------------------------------------------------------
+
+function SalesAdmin({ ctx }: { ctx: Ctx }) {
+  const dl = useDownload(ctx.notify);
+  const [rows, setRows] = useState<SalesEntry[] | null>(null);
+  const [error, setError] = useState("");
+  const [q, setQ] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      setRows(await api<SalesEntry[]>("/api/admin/sales"));
+      setError("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "판매실적을 불러오지 못했습니다.");
+    }
+  }, []);
+  useEffect(() => {
+    load();
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 30000);
+    return () => clearInterval(t);
+  }, [load]);
+
+  const by = useMemo(() => {
+    const m = new Map<string, SalesEntry>();
+    for (const e of rows ?? []) if (e.companyId) m.set(`${e.companyId}|${e.day}`, e);
+    return m;
+  }, [rows]);
+
+  const companies = ctx.data.companies.filter((c) => !q.trim() || c.name.toLowerCase().includes(q.trim().toLowerCase()));
+  const totals = EVENT_DAYS.map((d) => {
+    let items = 0;
+    let amount = 0;
+    let n = 0;
+    for (const c of ctx.data.companies) {
+      const e = by.get(`${c.id}|${d.date}`);
+      if (e) {
+        items += e.items;
+        amount += e.amount;
+        n++;
+      }
+    }
+    return { items, amount, n };
+  });
+  const gItems = totals.reduce((a, t) => a + t.items, 0);
+  const gAmount = totals.reduce((a, t) => a + t.amount, 0);
+  const lastDay = EVENT_DAYS[EVENT_DAYS.length - 1].date;
+  const surveyDone = ctx.data.companies.filter((c) => by.get(`${c.id}|${lastDay}`)?.surveyDone).length;
+
+  return (
+    <>
+      <div className="ad-top">
+        <div>
+          <h1>판매실적</h1>
+          <p>업체가 행사일(10/23·24·25)별로 제출한 판매 건수와 금액입니다. 30초마다 자동으로 새로 불러옵니다.</p>
+        </div>
+        <div className="dl-actions">
+          <button className="btn btn-primary btn-sm" disabled={dl.busy !== null} onClick={() => dl.run("sales")}>
+            {dl.busy === "sales" ? "만드는 중…" : "엑셀 내려받기"}
+          </button>
+          <button className="btn btn-soft btn-sm" disabled={dl.busy !== null} onClick={() => dl.run("sales", "pdf")}>
+            {dl.busy === "sales.pdf" ? "만드는 중…" : "PDF 내려받기"}
+          </button>
+        </div>
+      </div>
+
+      {error && <div className="notice notice-error" style={{ marginBottom: 16 }}>{error}</div>}
+      {!rows && !error && <Spinner />}
+
+      {rows && (
+        <>
+          <div className="sales-kpis">
+            <div className="sales-kpi">
+              <div className="k">총 판매 건수</div>
+              <div className="v">{formatNumber(gItems)}건</div>
+            </div>
+            <div className="sales-kpi">
+              <div className="k">총 판매금액</div>
+              <div className="v">{formatWon(gAmount)}</div>
+            </div>
+            {EVENT_DAYS.map((d, i) => (
+              <div className="sales-kpi" key={d.date}>
+                <div className="k">
+                  {d.short} 입력 업체
+                </div>
+                <div className="v">
+                  {totals[i].n} / {ctx.data.companies.length}
+                </div>
+              </div>
+            ))}
+            <div className="sales-kpi">
+              <div className="k">10/25 만족도조사 완료</div>
+              <div className="v">
+                {surveyDone} / {ctx.data.companies.length}
+              </div>
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-head">
+              <h2>업체별 · 일자별 판매실적</h2>
+              <input className="input" style={{ maxWidth: 240, minHeight: 40, padding: "8px 14px", fontSize: 15 }} placeholder="업체명 검색" value={q} onChange={(e) => setQ(e.target.value)} />
+            </div>
+            <div className="table-wrap">
+              <table className="data-table sales-admin">
+                <thead>
+                  <tr>
+                    <th rowSpan={2}>업체명</th>
+                    {EVENT_DAYS.map((d) => (
+                      <th key={d.date} colSpan={2} className="c day-sep">
+                        {d.label} ({d.weekday})
+                      </th>
+                    ))}
+                    <th colSpan={2} className="c day-sep">
+                      합계
+                    </th>
+                    <th rowSpan={2} className="c">
+                      10/25 만족도조사
+                    </th>
+                  </tr>
+                  <tr>
+                    {[...EVENT_DAYS, null].flatMap((d, i) => [
+                      <th key={`a${i}`} className={`r${i >= 0 ? " day-sep" : ""}`}>
+                        건수
+                      </th>,
+                      <th key={`b${i}`} className="r">
+                        금액(원)
+                      </th>,
+                    ])}
+                  </tr>
+                </thead>
+                <tbody>
+                  {companies.map((c) => {
+                    let ti = 0;
+                    let ta = 0;
+                    const cells = EVENT_DAYS.flatMap((d) => {
+                      const e = by.get(`${c.id}|${d.date}`);
+                      if (e) {
+                        ti += e.items;
+                        ta += e.amount;
+                      }
+                      return [
+                        <td key={`${d.date}i`} className="r num day-sep">
+                          {e ? formatNumber(e.items) : <span className="muted">-</span>}
+                        </td>,
+                        <td key={`${d.date}a`} className="r num">
+                          {e ? formatNumber(e.amount) : <span className="muted">-</span>}
+                        </td>,
+                      ];
+                    });
+                    const last = by.get(`${c.id}|${lastDay}`);
+                    const any = EVENT_DAYS.some((d) => by.has(`${c.id}|${d.date}`));
+                    return (
+                      <tr key={c.id}>
+                        <td>{c.name}</td>
+                        {cells}
+                        <td className="r num day-sep">
+                          <strong>{any ? formatNumber(ti) : "-"}</strong>
+                        </td>
+                        <td className="r num">
+                          <strong>{any ? formatNumber(ta) : "-"}</strong>
+                        </td>
+                        <td className="c">
+                          {last ? last.surveyDone ? <span className="status done">완료</span> : <span className="status todo">미완료</span> : <span className="muted">-</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {companies.length === 0 && (
+                    <tr>
+                      <td colSpan={9} className="muted" style={{ textAlign: "center" }}>
+                        조건에 맞는 업체가 없습니다.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td>전체 합계</td>
+                    {totals.flatMap((t, i) => [
+                      <td key={`ti${i}`} className="r num day-sep">
+                        {formatNumber(t.items)}
+                      </td>,
+                      <td key={`ta${i}`} className="r num">
+                        {formatNumber(t.amount)}
+                      </td>,
+                    ])}
+                    <td className="r num day-sep">{formatNumber(gItems)}</td>
+                    <td className="r num">{formatNumber(gAmount)}</td>
+                    <td />
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
@@ -1228,6 +1452,10 @@ function describe(l: AuditLog): string {
     if (name) parts.push(`이름: ${name.from} → ${name.to}`);
     if (typeof d.isLocked === "boolean") parts.push(d.isLocked ? "수정 잠금" : "잠금 해제");
     return parts.join(", ");
+  }
+  if (l.action === "sales_created" || l.action === "sales_updated") {
+    const day = typeof d.day === "string" ? d.day.slice(5).replace("-", "/") : "";
+    return `${day} · ${formatNumber(Number(d.items ?? 0))}건 / ${formatNumber(Number(d.amount ?? 0))}원${d.surveyDone ? " · 만족도조사 완료" : ""}`;
   }
   if (l.action === "submission_created" || l.action === "submission_updated") {
     const after = d.after as Submission | undefined;

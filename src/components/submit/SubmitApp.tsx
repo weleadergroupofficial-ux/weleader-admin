@@ -8,6 +8,7 @@ import { draftFromSubmission, draftToPayload, validateSubmission } from "@/lib/v
 import { SubmissionEditor } from "../SubmissionEditor";
 import { SubmissionSummary } from "../SubmissionSummary";
 import { Spinner, Wordmark } from "../ui/fields";
+import { CompanyTabs } from "./CompanyTabs";
 
 type Phase = "loading" | "invalid" | "failed" | "form" | "preview" | "done" | "readonly";
 
@@ -138,6 +139,8 @@ export default function SubmitApp({ token }: { token: string }) {
             </div>
           )}
         </header>
+
+        {companyName && <CompanyTabs token={token} active="info" />}
 
         {phase === "loading" && (
           <div className="state-screen">

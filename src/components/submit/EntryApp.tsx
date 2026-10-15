@@ -25,7 +25,7 @@ export default function EntryApp() {
     load();
   }, []);
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent, dest: "info" | "sales" = "info") {
     e.preventDefault();
     if (!companyId) return setError("업체명을 선택해 주세요.");
     if (!/^[0-9]{4}$/.test(code)) return setError("담당자 휴대폰 번호 뒷자리 숫자 4자리를 입력해 주세요.");
@@ -33,7 +33,7 @@ export default function EntryApp() {
     setError("");
     try {
       const r = await api<{ token: string }>("/api/entry/verify", { method: "POST", json: { companyId, code } });
-      navigate(`/s/${r.token}`);
+      navigate(dest === "sales" ? `/s/${r.token}/sales` : `/s/${r.token}`);
     } catch (err) {
       setError(err instanceof ApiError || err instanceof Error ? err.message : "확인하지 못했습니다.");
       setBusy(false);
@@ -73,7 +73,7 @@ export default function EntryApp() {
           )}
 
           {companies && (
-            <form className="item-grid" onSubmit={submit} noValidate>
+            <form className="item-grid" onSubmit={(e) => submit(e, "info")} noValidate>
               <div className={`field${error && !companyId ? " invalid" : ""}`}>
                 <label className="field-label" htmlFor="entry-company">
                   <span className="q">1</span>
@@ -126,7 +126,10 @@ export default function EntryApp() {
               )}
 
               <button className="btn btn-primary btn-lg btn-block" disabled={busy}>
-                {busy ? "확인 중…" : "입력 시작하기"}
+                {busy ? "확인 중…" : "참가정보 입력하기"}
+              </button>
+              <button type="button" className="btn btn-soft btn-lg btn-block" disabled={busy} onClick={(e) => submit(e, "sales")}>
+                {busy ? "확인 중…" : "행사 판매실적 입력하기 (10/23~25)"}
               </button>
               <p className="field-hint" style={{ margin: 0 }}>
                 이미 제출했어도 같은 방법으로 들어와 내용을 수정할 수 있습니다.

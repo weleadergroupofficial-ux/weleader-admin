@@ -4,9 +4,10 @@ import JSZip from "jszip";
  * 가벼운 XLSX 작성기/판독기.
  * - 금액·수량은 숫자 셀로 저장하고 '#,##0' 서식으로 천 단위 쉼표를 표시합니다(계산 가능).
  * - 문자열은 inline string 으로만 기록하므로 '=' 로 시작하는 입력도 수식으로 실행되지 않습니다.
+ * - 제목 영역 · 머리글 · 줄무늬 · 합계 행 · 인쇄 설정(가로, 머리글 반복, 쪽 번호)을 행사 톤에 맞춰 꾸밉니다.
  */
 
-export type ColType = "text" | "number" | "percent" | "datetime";
+export type ColType = "text" | "center" | "number" | "percent" | "datetime";
 export interface Column {
   header: string;
   width?: number;
@@ -15,12 +16,35 @@ export interface Column {
 export type CellValue = string | number | Date | null | undefined | { formula: string; value: number };
 export interface SheetSpec {
   name: string;
+  /** PDF 에서 표 위에 보이는 소제목 (없으면 시트 이름) */
+  heading?: string;
   columns: Column[];
   rows: CellValue[][];
   totals?: CellValue[];
 }
+/** 엑셀·PDF 공통 문서 정의 */
+export interface ExportDoc {
+  title: string;
+  subtitle?: string;
+  kpis?: Array<[string, string]>;
+  sheets: SheetSpec[];
+  /** true 면 제목 영역 없이 1행이 머리글인 단순 표 (업로드용 양식) */
+  plain?: boolean;
+}
 
-const STYLE = { header: 1, text: 2, number: 3, percent: 4, datetime: 5, totalText: 6, totalNumber: 7 } as const;
+/** 머리글 행 번호(1부터)와 첫 데이터 행 번호 */
+export const HEADER_ROW = 4;
+export const FIRST_ROW = HEADER_ROW + 1;
+
+export const BRAND = {
+  deep: "571173", // 로고 보라
+  violet: "6A4BD6",
+  ink: "2A1F45",
+  muted: "6C6484",
+  zebra: "F6F0FA",
+  total: "EADCF5",
+  line: "DCCDEB",
+};
 
 function esc(s: string): string {
   return s
@@ -47,91 +71,181 @@ function excelSerial(d: Date): number {
   return (d.getTime() + 9 * 3600 * 1000) / 86400000 + 25569;
 }
 
-function cellXml(ref: string, v: CellValue, type: ColType, isTotal: boolean): string {
-  if (v == null || v === "") {
-    const s = isTotal ? STYLE.totalText : type === "text" ? STYLE.text : STYLE[type];
-    return `<c r="${ref}" s="${s}"/>`;
+// ---------------------------------------------------------------------
+// 스타일 등록기
+// ---------------------------------------------------------------------
+
+interface XfSpec {
+  numFmt?: number;
+  font: number;
+  fill?: number;
+  border?: number;
+  h?: "left" | "center" | "right";
+  wrap?: boolean;
+}
+
+class Styles {
+  private list: XfSpec[] = [{ font: 0 }];
+  private index = new Map<string, number>([[JSON.stringify({ font: 0 }), 0]]);
+  xf(s: XfSpec): number {
+    const key = JSON.stringify(s);
+    const hit = this.index.get(key);
+    if (hit != null) return hit;
+    this.list.push(s);
+    this.index.set(key, this.list.length - 1);
+    return this.list.length - 1;
   }
+  xml(): string {
+    const fonts = [
+      `<font><sz val="10"/><color rgb="FF${BRAND.ink}"/><name val="맑은 고딕"/><family val="2"/></font>`,
+      `<font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="맑은 고딕"/><family val="2"/></font>`,
+      `<font><b/><sz val="10"/><color rgb="FF${BRAND.deep}"/><name val="맑은 고딕"/><family val="2"/></font>`,
+      `<font><b/><sz val="20"/><color rgb="FF${BRAND.deep}"/><name val="맑은 고딕"/><family val="2"/></font>`,
+      `<font><sz val="10"/><color rgb="FF${BRAND.muted}"/><name val="맑은 고딕"/><family val="2"/></font>`,
+      `<font><b/><sz val="10"/><color rgb="FF${BRAND.violet}"/><name val="맑은 고딕"/><family val="2"/></font>`,
+    ];
+    const fills = [
+      `<fill><patternFill patternType="none"/></fill>`,
+      `<fill><patternFill patternType="gray125"/></fill>`,
+      `<fill><patternFill patternType="solid"><fgColor rgb="FF${BRAND.deep}"/><bgColor indexed="64"/></patternFill></fill>`,
+      `<fill><patternFill patternType="solid"><fgColor rgb="FF${BRAND.zebra}"/><bgColor indexed="64"/></patternFill></fill>`,
+      `<fill><patternFill patternType="solid"><fgColor rgb="FF${BRAND.total}"/><bgColor indexed="64"/></patternFill></fill>`,
+    ];
+    const line = (side: string, style: string, color: string) => `<${side} style="${style}"><color rgb="FF${color}"/></${side}>`;
+    const borders = [
+      `<border><left/><right/><top/><bottom/><diagonal/></border>`,
+      // 1: 데이터 행 — 아래쪽 가는 선만
+      `<border><left/><right/><top/>${line("bottom", "thin", BRAND.line)}<diagonal/></border>`,
+      // 2: 머리글 — 아래쪽 굵은 선
+      `<border><left/><right/><top/>${line("bottom", "medium", BRAND.violet)}<diagonal/></border>`,
+      // 3: 합계 — 위쪽 굵은 선
+      `<border><left/><right/>${line("top", "medium", BRAND.deep)}${line("bottom", "thin", BRAND.deep)}<diagonal/></border>`,
+    ];
+    const xfs = this.list.map((s) => {
+      const attrs = [
+        `numFmtId="${s.numFmt ?? 0}"`,
+        `fontId="${s.font}"`,
+        `fillId="${s.fill ?? 0}"`,
+        `borderId="${s.border ?? 0}"`,
+        `xfId="0"`,
+        s.numFmt ? `applyNumberFormat="1"` : "",
+        `applyFont="1"`,
+        s.fill ? `applyFill="1"` : "",
+        s.border ? `applyBorder="1"` : "",
+        `applyAlignment="1"`,
+      ]
+        .filter(Boolean)
+        .join(" ");
+      return `<xf ${attrs}><alignment horizontal="${s.h ?? "left"}" vertical="center"${s.wrap ? ` wrapText="1"` : ""}/></xf>`;
+    });
+    return (
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+      `<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">` +
+      `<numFmts count="1"><numFmt numFmtId="164" formatCode="yyyy-mm-dd hh:mm"/></numFmts>` +
+      `<fonts count="${fonts.length}">${fonts.join("")}</fonts>` +
+      `<fills count="${fills.length}">${fills.join("")}</fills>` +
+      `<borders count="${borders.length}">${borders.join("")}</borders>` +
+      `<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>` +
+      `<cellXfs count="${xfs.length}">${xfs.join("")}</cellXfs>` +
+      `<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>` +
+      `</styleSheet>`
+    );
+  }
+}
+
+const FONT = { body: 0, head: 1, total: 2, title: 3, sub: 4, kpi: 5 };
+const FILL = { none: 0, head: 2, zebra: 3, total: 4 };
+const BORDER = { none: 0, row: 1, head: 2, total: 3 };
+
+function bodyXf(st: Styles, type: ColType, zebra: boolean): number {
+  const fill = zebra ? FILL.zebra : FILL.none;
+  if (type === "number") return st.xf({ numFmt: 3, font: FONT.body, fill, border: BORDER.row, h: "right" });
+  if (type === "percent") return st.xf({ numFmt: 9, font: FONT.body, fill, border: BORDER.row, h: "center" });
+  if (type === "datetime") return st.xf({ numFmt: 164, font: FONT.body, fill, border: BORDER.row, h: "center" });
+  if (type === "center") return st.xf({ font: FONT.body, fill, border: BORDER.row, h: "center", wrap: true });
+  return st.xf({ font: FONT.body, fill, border: BORDER.row, h: "left", wrap: true });
+}
+
+function totalXf(st: Styles, type: ColType): number {
+  if (type === "number") return st.xf({ numFmt: 3, font: FONT.total, fill: FILL.total, border: BORDER.total, h: "right" });
+  if (type === "percent") return st.xf({ numFmt: 9, font: FONT.total, fill: FILL.total, border: BORDER.total, h: "center" });
+  return st.xf({ font: FONT.total, fill: FILL.total, border: BORDER.total, h: type === "center" ? "center" : "left" });
+}
+
+function cellXml(st: Styles, ref: string, v: CellValue, type: ColType, zebra: boolean, isTotal: boolean): string {
+  const s = isTotal ? totalXf(st, type) : bodyXf(st, type, zebra);
+  if (v == null || v === "") return `<c r="${ref}" s="${s}"/>`;
   if (typeof v === "object" && !(v instanceof Date)) {
-    const s = isTotal ? STYLE.totalNumber : type === "percent" ? STYLE.percent : STYLE.number;
     return `<c r="${ref}" s="${s}"><f>${esc(v.formula)}</f><v>${v.value}</v></c>`;
   }
-  if (v instanceof Date) {
-    return `<c r="${ref}" s="${STYLE.datetime}"><v>${excelSerial(v)}</v></c>`;
-  }
-  if (typeof v === "number") {
-    const s = isTotal ? STYLE.totalNumber : type === "percent" ? STYLE.percent : type === "datetime" ? STYLE.datetime : STYLE.number;
-    return `<c r="${ref}" s="${s}"><v>${v}</v></c>`;
-  }
-  const s = isTotal ? STYLE.totalText : STYLE.text;
+  if (v instanceof Date) return `<c r="${ref}" s="${bodyXf(st, "datetime", zebra)}"><v>${excelSerial(v)}</v></c>`;
+  if (typeof v === "number") return `<c r="${ref}" s="${s}"><v>${v}</v></c>`;
   return `<c r="${ref}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${esc(String(v))}</t></is></c>`;
 }
 
-function sheetXml(spec: SheetSpec): string {
-  const cols = spec.columns
-    .map((c, i) => `<col min="${i + 1}" max="${i + 1}" width="${c.width ?? 14}" customWidth="1"/>`)
-    .join("");
+function sheetXml(st: Styles, doc: ExportDoc, spec: SheetSpec, generated: string): string {
+  const n = spec.columns.length;
+  const last = colLetter(n - 1);
+  const HR = doc.plain ? 1 : HEADER_ROW;
+  const FR = HR + 1;
+  const cols = spec.columns.map((c, i) => `<col min="${i + 1}" max="${i + 1}" width="${c.width ?? 14}" customWidth="1"/>`).join("");
+
+  const titleXf = st.xf({ font: FONT.title, h: "left" });
+  const subXf = st.xf({ font: FONT.sub, h: "left" });
+  const kpiXf = st.xf({ font: FONT.kpi, h: "left" });
+  const headXf = st.xf({ font: FONT.head, fill: FILL.head, border: BORDER.head, h: "center", wrap: true });
+
+  const subtitle = [doc.subtitle, `생성 ${generated}`].filter(Boolean).join("   ·   ");
+  const kpi = (doc.kpis ?? []).map(([k, v]) => `${k} ${v}`).join("     |     ");
+
   const rows: string[] = [];
+  const textRow = (r: number, ht: number, text: string, xf: number) =>
+    `<row r="${r}" ht="${ht}" customHeight="1"><c r="A${r}" s="${xf}" t="inlineStr"><is><t xml:space="preserve">${esc(text)}</t></is></c></row>`;
+  if (!doc.plain) {
+    rows.push(textRow(1, 38, doc.title, titleXf));
+    rows.push(textRow(2, 20, subtitle, subXf));
+    rows.push(textRow(3, 22, kpi, kpiXf));
+  }
   rows.push(
-    `<row r="1" ht="30" customHeight="1">${spec.columns
-      .map((c, i) => `<c r="${colLetter(i)}1" s="${STYLE.header}" t="inlineStr"><is><t>${esc(c.header)}</t></is></c>`)
+    `<row r="${HR}" ht="32" customHeight="1">${spec.columns
+      .map((c, i) => `<c r="${colLetter(i)}${HR}" s="${headXf}" t="inlineStr"><is><t>${esc(c.header)}</t></is></c>`)
       .join("")}</row>`,
   );
   spec.rows.forEach((r, ri) => {
-    const rn = ri + 2;
+    const rn = FR + ri;
+    const zebra = ri % 2 === 1;
     rows.push(
-      `<row r="${rn}">${spec.columns.map((c, ci) => cellXml(`${colLetter(ci)}${rn}`, r[ci], c.type ?? "text", false)).join("")}</row>`,
+      `<row r="${rn}" ht="22" customHeight="1">${spec.columns
+        .map((c, ci) => cellXml(st, `${colLetter(ci)}${rn}`, r[ci], c.type ?? "text", zebra, false))
+        .join("")}</row>`,
     );
   });
   if (spec.totals) {
-    const rn = spec.rows.length + 2;
+    const rn = FR + spec.rows.length;
     rows.push(
-      `<row r="${rn}" ht="24" customHeight="1">${spec.columns
-        .map((c, ci) => cellXml(`${colLetter(ci)}${rn}`, spec.totals![ci], c.type ?? "text", true))
+      `<row r="${rn}" ht="26" customHeight="1">${spec.columns
+        .map((c, ci) => cellXml(st, `${colLetter(ci)}${rn}`, spec.totals![ci], c.type ?? "text", false, true))
         .join("")}</row>`,
     );
   }
-  const last = colLetter(spec.columns.length - 1);
-  const filter = `<autoFilter ref="A1:${last}${Math.max(spec.rows.length + 1, 1)}"/>`;
+
+  const lastDataRow = Math.max(FR + spec.rows.length - 1, HR);
   return (
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
     `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">` +
-    `<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>` +
-    `<sheetFormatPr defaultRowHeight="18"/>` +
-    `<cols>${cols}</cols><sheetData>${rows.join("")}</sheetData>${filter}` +
-    `<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/>` +
+    `<sheetPr><tabColor rgb="FF${BRAND.deep}"/><pageSetUpPr fitToPage="1"/></sheetPr>` +
+    `<sheetViews><sheetView showGridLines="0" workbookViewId="0"><pane ySplit="${HR}" topLeftCell="A${FR}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>` +
+    `<sheetFormatPr defaultRowHeight="20"/>` +
+    `<cols>${cols}</cols><sheetData>${rows.join("")}</sheetData>` +
+    `<autoFilter ref="A${HR}:${last}${lastDataRow}"/>` +
+    (doc.plain ? "" : `<mergeCells count="3"><mergeCell ref="A1:${last}1"/><mergeCell ref="A2:${last}2"/><mergeCell ref="A3:${last}3"/></mergeCells>`) +
+    `<printOptions horizontalCentered="1"/>` +
+    `<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.7" header="0.3" footer="0.3"/>` +
+    `<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>` +
+    `<headerFooter><oddFooter>&amp;L&amp;8BEAUTY WAVE in INCHEON 2026 · 운영사무국&amp;R&amp;8&amp;P / &amp;N</oddFooter></headerFooter>` +
     `</worksheet>`
   );
 }
-
-const STYLES_XML =
-  `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
-  `<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">` +
-  `<numFmts count="1"><numFmt numFmtId="164" formatCode="yyyy-mm-dd hh:mm"/></numFmts>` +
-  `<fonts count="3">` +
-  `<font><sz val="10"/><name val="맑은 고딕"/><family val="2"/></font>` +
-  `<font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="맑은 고딕"/><family val="2"/></font>` +
-  `<font><b/><sz val="10"/><color rgb="FF2A1F45"/><name val="맑은 고딕"/><family val="2"/></font>` +
-  `</fonts>` +
-  `<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>` +
-  `<fill><patternFill patternType="solid"><fgColor rgb="FF6B4FD8"/><bgColor indexed="64"/></patternFill></fill>` +
-  `<fill><patternFill patternType="solid"><fgColor rgb="FFEFE9FB"/><bgColor indexed="64"/></patternFill></fill></fills>` +
-  `<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>` +
-  `<border><left style="thin"><color rgb="FFD9D2EA"/></left><right style="thin"><color rgb="FFD9D2EA"/></right>` +
-  `<top style="thin"><color rgb="FFD9D2EA"/></top><bottom style="thin"><color rgb="FFD9D2EA"/></bottom><diagonal/></border></borders>` +
-  `<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>` +
-  `<cellXfs count="8">` +
-  `<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>` +
-  `<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>` +
-  `<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>` +
-  `<xf numFmtId="3" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>` +
-  `<xf numFmtId="9" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>` +
-  `<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>` +
-  `<xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>` +
-  `<xf numFmtId="3" fontId="2" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>` +
-  `</cellXfs>` +
-  `<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>` +
-  `</styleSheet>`;
 
 function safeSheetName(name: string, used: Set<string>): string {
   let n = name.replace(/[\[\]:*?/\\]/g, " ").slice(0, 31) || "Sheet";
@@ -141,10 +255,29 @@ function safeSheetName(name: string, used: Set<string>): string {
   return n;
 }
 
-export async function buildXlsx(sheets: SheetSpec[]): Promise<Uint8Array> {
+function seoulStamp(d = new Date()): string {
+  const p = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
+  const g = (t: string) => p.find((x) => x.type === t)?.value ?? "";
+  return `${g("year")}.${g("month")}.${g("day")} ${g("hour")}:${g("minute")}`;
+}
+export { seoulStamp };
+
+export async function buildXlsx(doc: ExportDoc): Promise<Uint8Array> {
+  const sheets = doc.sheets;
   const zip = new JSZip();
   const used = new Set<string>();
   const names = sheets.map((s) => safeSheetName(s.name, used));
+  const st = new Styles();
+  const generated = seoulStamp();
+  const sheetXmls = sheets.map((s) => sheetXml(st, doc, s, generated));
 
   zip.file(
     "[Content_Types].xml",
@@ -169,6 +302,8 @@ export async function buildXlsx(sheets: SheetSpec[]): Promise<Uint8Array> {
       `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>` +
       `</Relationships>`,
   );
+  const hr = doc.plain ? 1 : HEADER_ROW;
+  const qn = (i: number) => `'${esc(names[i].replace(/'/g, "''"))}'`;
   zip.file(
     "xl/workbook.xml",
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
@@ -177,9 +312,10 @@ export async function buildXlsx(sheets: SheetSpec[]): Promise<Uint8Array> {
       `<definedNames>${sheets
         .map(
           (s, i) =>
-            `<definedName name="_xlnm._FilterDatabase" localSheetId="${i}" hidden="1">'${esc(names[i].replace(/'/g, "''"))}'!$A$1:$${colLetter(
+            `<definedName name="_xlnm._FilterDatabase" localSheetId="${i}" hidden="1">${qn(i)}!$A$${hr}:$${colLetter(
               s.columns.length - 1,
-            )}$${Math.max(s.rows.length + 1, 1)}</definedName>`,
+            )}$${Math.max(hr + s.rows.length, hr)}</definedName>` +
+            `<definedName name="_xlnm.Print_Titles" localSheetId="${i}">${qn(i)}!$${hr}:$${hr}</definedName>`,
         )
         .join("")}</definedNames>` +
       `</workbook>`,
@@ -197,8 +333,8 @@ export async function buildXlsx(sheets: SheetSpec[]): Promise<Uint8Array> {
       `<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>` +
       `</Relationships>`,
   );
-  zip.file("xl/styles.xml", STYLES_XML);
-  sheets.forEach((s, i) => zip.file(`xl/worksheets/sheet${i + 1}.xml`, sheetXml(s)));
+  zip.file("xl/styles.xml", st.xml());
+  sheetXmls.forEach((x, i) => zip.file(`xl/worksheets/sheet${i + 1}.xml`, x));
   return zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
 }
 

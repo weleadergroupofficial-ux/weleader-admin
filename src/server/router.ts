@@ -1,6 +1,8 @@
 import { validateSubmission } from "@/lib/validation";
+import { DEFAULT_SURVEY_URL, EVENT_DATES, validateSales, type SalesEntry } from "@/lib/event";
 import type { AdminOverview, AuditLog, PublicSubmitState, Submission } from "@/lib/types";
-import { buildExport, buildImportTemplate, EXPORT_FILES, type ExportType } from "./exports";
+import { buildExportDoc, buildImportTemplate, EXPORT_FILES, type ExportType } from "./exports";
+import { buildPdf } from "./pdf";
 import {
   authConfig,
   checkPassword,
@@ -11,7 +13,7 @@ import {
   verifySessionToken,
 } from "./session";
 import { ConfigError, rpc, RpcError } from "./supabase";
-import { readCsvFirstColumn, readFirstColumn } from "./xlsx";
+import { buildXlsx, readCsvFirstColumn, readFirstColumn } from "./xlsx";
 
 /**
  * 모든 API 요청의 단일 진입점. 웹 표준 Request → Response 이므로
@@ -43,6 +45,7 @@ const DB_ERRORS: Record<string, [number, string]> = {
   BW_CONFLICT: [409, "다른 곳에서 먼저 저장된 내용이 있습니다. 새로고침해 최신 내용을 확인한 뒤 다시 저장해 주세요."],
   BW_COMPANY_NOT_FOUND: [404, "업체 정보를 찾을 수 없습니다. 목록을 새로고침해 주세요."],
   BW_NOT_SUBMITTED: [404, "아직 제출된 정보가 없습니다."],
+  BW_SURVEY_REQUIRED: [422, "행사 마지막 날(10/25) 판매실적은 만족도조사를 완료한 뒤에 제출할 수 있습니다."],
   BW_BAD_REQUEST: [400, "입력값이 올바르지 않습니다. 내용을 확인해 주세요."],
 };
 
@@ -60,6 +63,8 @@ function toResponse(e: unknown): Response {
     }
     if (e.code === "23505") return json({ error: "같은 이름의 업체가 이미 등록되어 있습니다." }, 409);
     if (["23514", "23502", "22P02", "22003"].includes(e.code)) return json({ error: "입력값이 허용 범위를 벗어났습니다. 내용을 확인해 주세요." }, 400);
+    if ((e.code === "PGRST202" || e.code === "42883" || e.code === "42P01") && /sales/i.test(e.message))
+      return json({ error: "판매실적 데이터베이스 설정이 아직 적용되지 않았습니다. 운영사무국에 문의해 주세요." }, 500);
     if (e.code === "PGRST202" || e.code === "42883")
       return json({ error: "데이터베이스 함수가 없습니다. supabase/schema.sql 을 실행했는지 확인해 주세요." }, 500);
     if (e.status === 401 || e.status === 403 || e.code === "42501")
@@ -153,13 +158,21 @@ function cleanNames(values: string[]): string[] {
   return out;
 }
 
-function fileResponse(bytes: Uint8Array, filename: string) {
+const XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+function originOf(req: Request) {
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? new URL(req.url).host;
+  return `${isHttps(req) ? "https" : "http"}://${host}`;
+}
+
+function fileResponse(bytes: Uint8Array, filename: string, type = XLSX_TYPE) {
+  const ext = filename.endsWith(".pdf") ? "pdf" : "xlsx";
   return new Response(bytes as unknown as BodyInit, {
     status: 200,
     headers: {
       ...NO_STORE,
-      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="export.xlsx"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+      "Content-Type": type,
+      "Content-Disposition": `attachment; filename="export.${ext}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
     },
   });
 }
@@ -213,6 +226,34 @@ async function route(req: Request, path: string[]): Promise<Response> {
         data: v.value,
       });
       return json({ submission });
+    }
+    throw new HttpError(405, "지원하지 않는 요청입니다.");
+  }
+
+  // ----- 참가업체(공개) : 판매실적 /api/sales/:token[/:day] -----
+  if (a === "sales" && b) {
+    if (!TOKEN.test(b)) throw new HttpError(404, "유효하지 않은 링크입니다. 운영사무국에서 받은 링크를 다시 확인해 주세요.");
+    const state = await rpc<{ company: { id: string; name: string } } | null>("bw_get_by_token", { token: b });
+    if (!state) throw new HttpError(404, "유효하지 않은 링크입니다. 운영사무국에서 받은 링크를 다시 확인해 주세요.");
+    const surveyUrl = process.env.SURVEY_URL?.trim() || DEFAULT_SURVEY_URL;
+
+    if (!c && method === "GET") {
+      const entries = await rpc<SalesEntry[]>("bw_get_sales", { companyId: state.company.id });
+      return json({ company: { name: state.company.name }, entries, surveyUrl });
+    }
+    if (c && method === "PUT") {
+      if (!EVENT_DATES.includes(c)) throw new HttpError(404, "행사 일자가 올바르지 않습니다.");
+      const body = await readJson(req, 4096);
+      const v = validateSales(body);
+      if (!v.ok) throw new HttpError(422, "입력 내용을 확인해 주세요.", { fieldErrors: v.errors });
+      const entry = await rpc<SalesEntry>("bw_save_sales", {
+        companyId: state.company.id,
+        day: c,
+        items: v.items,
+        amount: v.amount,
+        surveyDone: v.surveyDone,
+      });
+      return json({ entry });
     }
     throw new HttpError(405, "지원하지 않는 요청입니다.");
   }
@@ -280,16 +321,25 @@ async function route(req: Request, path: string[]): Promise<Response> {
     return json(await rpc("bw_set_settings", { submissionOpen: body.submissionOpen }));
   }
 
+  if (b === "sales" && method === "GET") {
+    return json(await rpc<SalesEntry[]>("bw_admin_sales"));
+  }
+
   if (b === "template" && method === "GET") {
-    return fileResponse(await buildImportTemplate(), "참가업체_일괄등록_양식.xlsx");
+    return fileResponse(await buildXlsx(buildImportTemplate()), "참가업체_일괄등록_양식.xlsx");
   }
 
   if (b === "export" && c && method === "GET") {
     if (!(c in EXPORT_FILES)) throw new HttpError(404, "알 수 없는 다운로드 형식입니다.");
     const type = c as ExportType;
+    const format = new URL(req.url).searchParams.get("format") === "pdf" ? "pdf" : "xlsx";
     const overview = await rpc<AdminOverview>("bw_admin_overview");
-    const bytes = await buildExport(type, overview.companies, baseUrl(req));
-    return fileResponse(bytes, `BEAUTYWAVE2026_${EXPORT_FILES[type]}_${stamp()}.xlsx`);
+    let sales: SalesEntry[] = [];
+    if (type === "sales") sales = await rpc<SalesEntry[]>("bw_admin_sales");
+    const doc = buildExportDoc(type, overview.companies, baseUrl(req), sales);
+    const filename = `BEAUTYWAVE2026_${EXPORT_FILES[type]}_${stamp()}.${format}`;
+    if (format === "pdf") return fileResponse(await buildPdf(doc, originOf(req)), filename, "application/pdf");
+    return fileResponse(await buildXlsx(doc), filename);
   }
 
   if (b === "companies") {
