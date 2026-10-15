@@ -243,7 +243,7 @@ async function route(req: Request, path: string[]): Promise<Response> {
   // ----- 관리자 인증 -----
   if (b === "login" && method === "POST") {
     if (!authConfig()) {
-      throw new HttpError(500, "관리자 비밀번호(ADMIN_PASSWORD, 10자 이상)와 SESSION_SECRET(32자 이상) 환경변수를 설정해 주세요.");
+      throw new HttpError(500, "관리자 비밀번호(ADMIN_PASSWORD, 6자 이상)와 SESSION_SECRET(32자 이상) 환경변수를 설정해 주세요.");
     }
     const ip = clientIp(req);
     if (tooManyAttempts(ip)) throw new HttpError(429, "로그인 시도가 너무 많습니다. 15분 후 다시 시도해 주세요.");

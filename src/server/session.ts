@@ -35,7 +35,7 @@ function safeEqual(a: string, b: string): boolean {
 export function authConfig(): { password: string; secret: string } | null {
   const password = process.env.ADMIN_PASSWORD ?? "";
   const secret = process.env.SESSION_SECRET ?? "";
-  if (password.length < 10 || secret.length < 32) return null;
+  if (password.length < 6 || secret.length < 32) return null;
   return { password, secret };
 }
 
