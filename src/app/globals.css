@@ -49,7 +49,8 @@ body {
   font-size: 16px;
   line-height: 1.6;
   word-break: keep-all;
-  overflow-wrap: anywhere;
+  /* anywhere 는 표·카드의 최소 너비를 글자 단위로 줄여 단어가 중간에서 끊기므로, 정말 긴 문자열만 끊는 break-word 를 씁니다 */
+  overflow-wrap: break-word;
   -webkit-font-smoothing: antialiased;
 }
 button,
@@ -1707,7 +1708,7 @@ a.btn {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  padding: 4px 20px 0;
+  padding: 4px 0 0;
 }
 .sp-day {
   display: flex;
@@ -1755,7 +1756,7 @@ a.btn {
   margin-top: 6px;
 }
 .sp-missing {
-  padding: 16px 20px 20px;
+  padding: 18px 0 4px;
 }
 .sp-missing-head {
   display: flex;
@@ -1781,5 +1782,56 @@ a.btn {
 @media (max-width: 640px) {
   .sp-days {
     grid-template-columns: 1fr;
+  }
+}
+
+
+/* ---- 줄바꿈 정리 (한글은 어절 단위, 문장 끝 외톨이 글자 방지) ---- */
+h1,
+h2,
+h3,
+.sb-title,
+.section-title,
+.panel-head h2,
+.stat .label,
+.sales-kpi .k,
+.dl-card h3 {
+  text-wrap: balance;
+}
+p,
+li,
+.section-desc,
+.sub,
+.small,
+.notice,
+.dl-card p,
+.empty {
+  text-wrap: pretty;
+}
+/* 표 안의 단어·숫자는 중간에서 끊지 않고, 좁은 화면에서는 표를 옆으로 밀어서 봅니다 */
+.data-table th,
+.data-table td {
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+.data-table td.num,
+.data-table td.r,
+.data-table th.r,
+.data-table td.c,
+.data-table th.c,
+.data-table th {
+  white-space: nowrap;
+}
+/* 큰 숫자 · 금액은 한 덩어리로 유지 */
+.stat .value,
+.sales-kpi .v,
+.sp-n,
+.num {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+@media (max-width: 640px) {
+  .sales-kpi .v {
+    font-size: 1.15rem;
   }
 }
