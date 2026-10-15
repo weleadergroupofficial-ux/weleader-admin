@@ -98,16 +98,31 @@ section{padding:56px 20px}
 .prize span{font-size:13.5px;color:var(--sub);line-height:1.5}
 .lucky .note{font-size:12px;color:rgba(255,255,255,.7);margin-top:12px}
 
+/* SURVEY */
+.survey{margin-top:28px;background:#fff;color:var(--ink);border-radius:22px;padding:22px 20px}
+.survey .eyebrow{color:var(--v2);margin-bottom:6px}
+.survey h3{font-size:20px;font-weight:800;letter-spacing:-.03em}
+.survey h3 span{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--pink);background:#FFE9F3;border-radius:999px;padding:3px 8px;margin-left:4px;vertical-align:3px}
+.survey ol{list-style:none;margin:16px 0 18px;display:flex;flex-direction:column;gap:10px}
+.survey li{display:flex;align-items:center;gap:10px;font-size:14.5px;font-weight:600}
+.survey li b{width:24px;height:24px;border-radius:50%;background:var(--l1);color:var(--v1);display:grid;place-items:center;font-size:12px;flex:none}
+.survey .btn{width:100%}
+.survey .sn{font-size:11.5px;color:var(--sub);margin-top:10px}
+a.pc{color:inherit;display:block}
 /* BRANDS */
 .brands{background:#fff}
-.map{margin-top:22px;background:var(--l2);border-radius:22px;padding:14px;border:1px solid var(--line)}
+.map{margin-top:22px;background:var(--l2);border-radius:22px;padding:8px;border:1px solid var(--line)}
+.map svg{border-radius:16px}
 .map svg{width:100%;height:auto;display:block}
-.map .booth rect{fill:#fff;stroke:#C9B6F5;stroke-width:1;transition:fill .2s}
-.map .booth text{font-size:8px;font-weight:700;fill:var(--v1);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.map .booth .bx{fill:url(#bf);transition:fill .2s;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25))}
+.map .booth text{dominant-baseline:central;pointer-events:none}
+.map .bn{font-family:Georgia,"Times New Roman",serif;font-size:7.5px;fill:#B8955A}
+.map .bt{font-weight:800;fill:#3A1966;letter-spacing:-.02em}
 .map .booth{cursor:pointer}
-.map .booth.on rect{fill:var(--v1);stroke:var(--v1)}
-.map .booth.on text{fill:#fff}
-.map .zl{font-size:8.5px;font-weight:700;text-anchor:middle;dominant-baseline:central}
+.map .booth.on .bx{fill:url(#bon)}
+.map .booth.on .bn{fill:#fff}
+.map .booth.on .bt{fill:#2C0B4E}
+.map .zl{font-weight:700;text-anchor:middle;dominant-baseline:central}
 .sel{margin-top:12px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:700;text-align:center}
 .sel img{height:26px;width:auto;max-width:46%;object-fit:contain}
 .sel i{width:1.5px;height:18px;background:#C9B6F5;flex:none}
@@ -156,13 +171,13 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
   <img class="kv" src="assets/kv.webp" alt="인천에서 만나는 뷰티 BEAUTY Wave in INCHEON · 2026.10.23 FRI – 10.25 SUN · 송도 트리플스트리트 A동 광장" width="1400" height="1400">
   <div class="free"><i></i>무료입장</div>
   <div class="chars">
-    <img src="assets/bermi.webp?v=2" alt="" width="543" height="720">
-    <img src="assets/komi.webp?v=2" alt="" width="553" height="720">
-    <img src="assets/aeini.webp?v=2" alt="" width="492" height="720">
+    <img src="assets/bermi.webp?v=3" alt="" width="543" height="720">
+    <img src="assets/komi.webp?v=3" alt="" width="553" height="720">
+    <img src="assets/aeini.webp?v=3" alt="" width="492" height="720">
   </div>
   <div class="hero-body">
     <h1>인천 뷰티 브랜드 <em>20곳</em>을<br>송도에서 한번에 만나보세요</h1>
-    <p>체험부터 LIVE, 럭키드로우까지 사흘간의 뷰티 팝업</p>
+    <p>체험부터 LIVE, 럭키드로우까지 3일간의 뷰티팝업</p>
     <div class="cta">
       <a class="btn pri" href="https://naver.me/xtgBSs8t" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>길찾기</a>
@@ -175,7 +190,7 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
   <div class="card fx">
     <dl>
       <dt>일시</dt><dd>2026. 10. 23(금) – 10. 25(일)</dd>
-      <dt>운영시간</dt><dd>금 13:00 – 20:00<small>토 · 일 10:30 – 20:30</small></dd>
+      <dt>운영시간</dt><dd>10:30 – 20:00<small>3일간 매일 동일</small></dd>
       <dt>장소</dt><dd>송도 트리플스트리트 A동 광장</dd>
       <dt>입장료</dt><dd><b>무료</b> · 누구나 자유롭게 방문하세요</dd>
     </dl>
@@ -202,10 +217,17 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
       <p>브랜드가 직접 진행하는 라이브 시연 프로그램</p>
       <span class="tag">3일간 진행</span>
     </div>
-    <div class="pc fx" style="grid-column:1/-1;display:flex;gap:14px;align-items:center">
-      <div class="ic" style="background:#E5F3FA;flex:none;margin:0">📸</div>
-      <div><h3>포토존</h3><p>포토존에서 인생샷 남기고, 럭키드로우까지 참여하세요</p></div>
+    <div class="pc fx">
+      <div class="ic" style="background:#E5F3FA">📸</div>
+      <h3>포토존</h3>
+      <p>인생샷 남기고 럭키드로우까지 참여하세요</p>
     </div>
+    <a class="pc fx" href="#survey">
+      <div class="ic" style="background:#FFF3DC">📝</div>
+      <h3>설문 이벤트</h3>
+      <p>1분 설문 참여하고 기념 선물 받아 가세요</p>
+      <span class="tag">바로 참여 →</span>
+    </a>
   </div>
 </section>
 
@@ -224,17 +246,29 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
     <div class="step fx"><h3>이벤트데스크에서 룰렛 돌리기</h3><p>게시물을 보여주고 해시태그 확인이 끝나면 룰렛을 돌려요</p></div>
   </div>
   <div class="prize fx">
-    <img src="assets/komi.webp?v=2" alt="" width="553" height="720">
+    <img src="assets/komi.webp?v=3" alt="" width="553" height="720">
     <div><b>경품은 참여기업 제품!</b><span>꽝 없이 모두에게 선물을 드려요</span></div>
   </div>
   <p class="note">※ 경품은 일자별 준비 수량이 소진되면 조기 마감될 수 있습니다.</p>
+
+  <div class="survey fx" id="survey">
+    <div class="eyebrow">SURVEY EVENT</div>
+    <h3>설문 이벤트 <span>MY BEAUTY PICK</span></h3>
+    <ol>
+      <li><b>1</b>아래 버튼으로 1분 설문 참여</li>
+      <li><b>2</b>완료 화면의 참여 번호 확인</li>
+      <li><b>3</b>이벤트데스크에 보여주고 기념 선물 받기</li>
+    </ol>
+    <a class="btn pri" href="https://beautywave.weleader.kr/survey" target="_blank" rel="noopener">설문 참여하기</a>
+    <p class="sn">※ 기념 선물은 준비 수량 소진 시 조기 마감될 수 있습니다.</p>
+  </div>
 </section>
 
 <section class="brands" id="brands">
   <div class="eyebrow fx">BRANDS &amp; MAP</div>
   <h2 class="fx">참여기업 20곳과 부스 위치</h2>
   <p class="lead fx">로고나 부스 번호를 누르면 위치를 바로 확인할 수 있어요</p>
-  <div class="map fx"><svg id="map" viewBox="0 0 300 306" role="img" aria-label="부스 배치도"></svg>
+  <div class="map fx"><svg id="map" viewBox="0 0 453 342" role="img" aria-label="부스 배치도"></svg>
     <div class="sel empty" id="sel">부스를 선택해 보세요</div>
   </div>
   <div class="logos" id="logos"></div>
@@ -247,7 +281,7 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
     <div class="top"></div>
     <div class="body">
       <div class="place">송도 트리플스트리트 A동 광장</div>
-      <div class="when">10.23(금) 13:00 – 20:00<br>10.24(토) – 25(일) 10:30 – 20:30</div>
+      <div class="when">10.23(금) – 10.25(일)<br>매일 10:30 – 20:00</div>
       <div class="cta" style="margin-top:18px">
         <a class="btn pri" href="https://naver.me/xtgBSs8t" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>네이버 지도로 길찾기</a>
@@ -256,7 +290,7 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
   </div>
   <div class="closing fx">
     <div class="cc">
-      <img src="assets/bermi.webp?v=2" alt="" width="543" height="720"><img src="assets/komi.webp?v=2" alt="" width="553" height="720"><img src="assets/aeini.webp?v=2" alt="" width="492" height="720">
+      <img src="assets/bermi.webp?v=3" alt="" width="543" height="720"><img src="assets/komi.webp?v=3" alt="" width="553" height="720"><img src="assets/aeini.webp?v=3" alt="" width="492" height="720">
     </div>
     <p class="k1">인천 뷰티의 새로운 물결,</p>
     <p class="k2">이번 주말 송도에서<br>직접 경험해 보세요!</p>
@@ -281,33 +315,70 @@ const B=[["에이지앤뷰티","agebeauty"],["리블로셀","reblocell"],["씨�
 ["하현","hahyun"],["스킨랩코리아","skinlab"],["웰빙헬스팜","wellbeing"],["디벨니티","develnity"],["비옴바이오랩스","biom"]];
 const ns="http://www.w3.org/2000/svg",svg=document.getElementById('map');
 function el(t,a,p){const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e}
-// layout (based on 운영계획 배치도: 하단 4 · 좌측 12 · 상단 4)
-const W=34,H=17,G=2,X0=8,Y0=24;
-const pos={};
-for(let i=0;i<4;i++)pos[17+i]=[X0+i*(W+G),Y0];                 // 상단 17~20 (좌→우)
-for(let i=0;i<12;i++)pos[16-i]=[X0,Y0+(H+G)*(i+1)];             // 좌측 16~5 (위→아래)
-for(let i=0;i<4;i++)pos[4-i]=[X0+i*(W+G),Y0+(H+G)*13];          // 하단 4~1 (좌→우)
-// zones
-el('rect',{x:4,y:4,width:292,height:292,rx:10,fill:'#fff',stroke:'#E3D8FA'});
-el('text',{x:96,y:13,class:'zl',fill:'#9A8FBF'}).textContent='건물 측 · 매장 전면';
-el('rect',{x:226,y:24,width:66,height:150,rx:6,fill:'#FBF5E6'});
-el('text',{x:259,y:99,class:'zl',fill:'#B8955A'}).textContent='자유통행로';
-el('rect',{x:62,y:64,width:96,height:110,rx:8,fill:'#EFE7FF',stroke:'#A07CF0','stroke-dasharray':'3 2'});
-el('text',{x:110,y:112,class:'zl',fill:'#5B3BD9','font-size':11}).textContent='LIVE 존';
-el('text',{x:110,y:127,class:'zl',fill:'#8C7FBF','font-size':7.5}).textContent='라이브 시연';
-el('rect',{x:176,y:190,width:116,height:56,rx:8,fill:'#FFE9F3',stroke:'#E8559B','stroke-width':.8});
-el('text',{x:234,y:218,class:'zl',fill:'#E8559B','font-size':11}).textContent='포토존 📸';
-el('rect',{x:176,y:248,width:78,height:24,rx:5,fill:'#5B3BD9'});
-el('text',{x:215,y:260,class:'zl',fill:'#fff','font-size':8}).textContent='이벤트데스크 🎁';
-el('rect',{x:256,y:248,width:36,height:24,rx:5,fill:'#24184A'});
-el('text',{x:274,y:260,class:'zl',fill:'#fff','font-size':8}).textContent='운영';
-el('rect',{x:154,y:290,width:56,height:12,rx:6,fill:'#24184A'});
-el('text',{x:182,y:296,class:'zl',fill:'#fff','font-size':7}).textContent='▲ 주출입구';
+// 부스 배치도 (현장 배치도 기준)
+svg.setAttribute('viewBox','0 0 453 342');
+const defs=el('defs',{});
+defs.innerHTML=`<linearGradient id="mbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2C0B4E"/><stop offset=".55" stop-color="#4A1A7A"/><stop offset="1" stop-color="#5E2794"/></linearGradient>
+<pattern id="mst" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)"><rect width="6" height="6" fill="none"/><line x1="0" y1="0" x2="0" y2="6" stroke="#fff" stroke-opacity=".035" stroke-width="2"/></pattern>
+<linearGradient id="bf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EDE3F7"/></linearGradient>
+<linearGradient id="bon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E9C77E"/><stop offset="1" stop-color="#B98E45"/></linearGradient>`;
+el('rect',{x:0,y:0,width:453,height:342,rx:14,fill:'url(#mbg)'});
+el('rect',{x:0,y:0,width:453,height:342,rx:14,fill:'url(#mst)'});
+const T=(x,y,t,o={})=>{const e=el('text',Object.assign({x,y,class:'zl'},o));e.textContent=t;return e};
+// 상단 · 주변
+el('rect',{x:35,y:2,width:331,height:13,rx:4,fill:'#fff','fill-opacity':.06});
+T(200,8.5,'건물 측 · 매장 전면',{fill:'#fff','fill-opacity':.55,'font-size':6});
+T(387,7.5,'현대아울렛',{fill:'#fff','font-size':6.5,'font-weight':800});
+el('circle',{cx:441,cy:27,r:9.5,fill:'none',stroke:'#fff','stroke-opacity':.25});
+T(441,22.5,'N',{fill:'#E9C77E','font-size':5.5});
+el('path',{d:'M441 25 l3.2 6 h-6.4z',fill:'#E9C77E'});
+T(20,165,'H&M · 무신사 · 점용 한계선',{fill:'#fff','fill-opacity':.6,'font-size':5.5,transform:'rotate(-90 20 165)'});
+T(441,170,'에스컬레이터 · ZARA · 굴다리 방면',{fill:'#fff','fill-opacity':.6,'font-size':5.5,transform:'rotate(90 441 170)'});
+// 행사장 영역
+el('rect',{x:35,y:17,width:389,height:298,rx:6,fill:'#fff','fill-opacity':.035,stroke:'#fff','stroke-opacity':.12});
+// 자유통행로
+el('path',{d:'M366 18 L408 18 L424 314 L395 314 Z',fill:'#fff','fill-opacity':.08,stroke:'#C9A86A','stroke-opacity':.7,'stroke-dasharray':'3 2'});
+T(395,141,'자유통행로',{fill:'#E9C77E','font-size':6.5,'font-weight':800});
+T(395,151,'6.0 M',{fill:'#fff','fill-opacity':.6,'font-size':5});
+// LIVE 존
+el('rect',{x:158,y:75,width:125,height:133,rx:4,fill:'#fff','fill-opacity':.04,stroke:'#fff','stroke-opacity':.4,'stroke-dasharray':'3 2'});
+el('rect',{x:188,y:84,width:64,height:8.5,rx:1.5,fill:'#14061F'});
+T(220,88.5,'70인치 TV',{fill:'#fff','fill-opacity':.8,'font-size':4.6});
+T(220,101.5,'LIVE STAGE',{fill:'#fff','font-size':7,'font-family':'Georgia,serif','letter-spacing':1.6,'font-weight':400});
+el('rect',{x:182,y:109,width:76,height:9,rx:1.5,fill:'#9A78D4','fill-opacity':.75});
+T(220,113.7,'테이블 3,600',{fill:'#fff','font-size':4.6});
+el('rect',{x:173,y:121,width:95,height:75,rx:4,fill:'#fff','fill-opacity':.13});
+T(220,153,'LIVE 존',{fill:'#fff','font-size':10,'font-weight':800});
+T(220,166,'관람 스탠딩',{fill:'#fff','fill-opacity':.6,'font-size':5});
+// 포토존
+el('rect',{x:295,y:180,width:63,height:70,rx:4,fill:'#fff','fill-opacity':.12,stroke:'#C9A86A','stroke-opacity':.8});
+T(326.5,210,'포토존',{fill:'#E9C77E','font-size':7.5,'font-weight':800});
+T(326.5,221,'백월 W5,000',{fill:'#fff','fill-opacity':.6,'font-size':4.8});
+// 이벤트데스크 · 운영사무국
+el('rect',{x:301,y:273,width:49,height:14,rx:2,fill:'#C9A86A'});
+T(325.5,280.2,'이벤트데스크',{fill:'#2C0B4E','font-size':5.2,'font-weight':800});
+el('rect',{x:354,y:265,width:35,height:34,rx:4,fill:'#160725'});
+T(371.5,279,'운영사무국',{fill:'#fff','font-size':5.2,'font-weight':800});
+T(371.5,289,'3×3',{fill:'#fff','fill-opacity':.6,'font-size':4.6});
+// 주출입구 · 횡단보도
+el('rect',{x:301,y:310,width:58,height:10,rx:2,fill:'#14061F'});
+T(330,315.2,'주출입구 4.0 M',{fill:'#fff','font-size':5,'font-weight':800});
+for(let i=0;i<9;i++)el('rect',{x:272+i*11,y:325,width:7,height:9,rx:1.5,fill:'#fff','fill-opacity':.12});
+T(384,330,'횡단보도',{fill:'#fff','fill-opacity':.5,'font-size':5});
+// 부스
+const BW=62,BH=18,pos={};
+[[17,40],[18,105],[19,170],[20,235]].forEach(([n,x])=>pos[n]=[x,21]);
+for(let k=0;k<12;k++)pos[16-k]=[40,21+20.8*(k+1)];
+[[4,40],[3,105],[2,170],[1,235]].forEach(([n,x])=>pos[n]=[x,21+20.8*13]);
 const gs={};
 for(let n=1;n<=20;n++){
-  const g=el('g',{class:'booth','data-n':n,tabindex:0,role:'button','aria-label':`${n}번 ${B[n-1][0]}`});
-  el('rect',{x:pos[n][0],y:pos[n][1],width:W,height:H,rx:3},g);
-  el('text',{x:pos[n][0]+W/2,y:pos[n][1]+H/2},g).textContent=String(n).padStart(2,'0');
+  const [x,y]=pos[n],nm=B[n-1][0];
+  const g=el('g',{class:'booth','data-n':n,tabindex:0,role:'button','aria-label':`${n}번 ${nm}`});
+  el('rect',{x,y,width:BW,height:BH,rx:3,class:'bx'},g);
+  const no=el('text',{x:x+4,y:y+BH/2+.3,class:'bn'},g);no.textContent=String(n).padStart(2,'0');
+  const fs=nm.length<=5?6:nm.length<=7?5.2:4.3;
+  const t=el('text',{x:x+19,y:y+BH/2+.3,class:'bt','font-size':fs},g);t.textContent=nm;
+  if(nm.length>=9)t.setAttribute('textLength',40),t.setAttribute('lengthAdjust','spacingAndGlyphs');
   g.addEventListener('click',()=>pick(n,false));gs[n]=g;
 }
 // logos
@@ -319,7 +390,7 @@ const sel=document.getElementById('sel');let cur=0;
 function pick(n,fromLogo){
   if(cur){gs[cur].classList.remove('on');ls[cur].classList.remove('on')}
   cur=n;gs[n].classList.add('on');ls[n].classList.add('on');
-  sel.className='sel';sel.innerHTML=`<img src="assets/logo_${B[n-1][1]}.webp" alt=""><i></i><span>${B[n-1][0]}</span>`;
+  sel.className='sel';sel.innerHTML=`<img src="assets/logo_${B[n-1][1]}_t.webp" alt=""><i></i><span>${B[n-1][0]}</span>`;
   if(fromLogo)document.querySelector('.map').scrollIntoView({behavior:'smooth',block:'center'});
 }
 // copy
