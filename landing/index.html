@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BEAUTY WAVE in INCHEON 2026</title>
+<meta name="description" content="인천에서 만나는 뷰티 · 2026.10.23(금)–10.25(일) 송도 트리플스트리트 A동 광장 · 인천 뷰티 브랜드 20곳 · 무료입장">
+<meta name="theme-color" content="#7A55E6">
+<meta property="og:type" content="website">
+<meta property="og:title" content="BEAUTY WAVE in INCHEON 2026">
+<meta property="og:description" content="10.23(금)–10.25(일) 송도 트리플스트리트 A동 광장 · 인천 뷰티 브랜드 20곳 · 무료입장">
+<meta property="og:image" content="https://2026beautywave-incheon.vercel.app/assets/og.jpg">
+<meta property="og:url" content="https://2026beautywave-incheon.vercel.app/">
+<link rel="icon" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preload" as="image" href="assets/kv.webp">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --v1:#5B3BD9; --v2:#7A55E6; --v3:#A07CF0; --l1:#EDE3FF; --l2:#F6F1FF;
+  --ink:#24184A; --sub:#6B6290; --pink:#E8559B; --gold:#B8955A; --line:#E3D8FA;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  color:var(--ink);background:#E9DFFC;word-break:keep-all;overflow-wrap:break-word;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:480px;margin:0 auto;background:var(--l2);min-height:100vh;overflow:hidden;box-shadow:0 0 60px rgba(91,59,217,.12)}
+h2{font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1.3;text-wrap:balance}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.18em;color:var(--v2);margin-bottom:8px}
+section{padding:56px 20px}
+.lead{color:var(--sub);font-size:15px;line-height:1.6;margin-top:10px;text-wrap:pretty}
+
+/* HERO */
+.hero{position:relative;padding:0;background:var(--l1)}
+.hero .kv{width:100%;aspect-ratio:1/1;object-fit:cover}
+.free{position:absolute;top:16px;right:16px;background:#fff;color:var(--v1);font-weight:800;font-size:13px;
+  padding:8px 13px;border-radius:999px;box-shadow:0 6px 18px rgba(60,30,160,.25);display:flex;gap:6px;align-items:center}
+.free i{width:7px;height:7px;border-radius:50%;background:var(--pink);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{transform:scale(1.6);opacity:.5}}
+.chars{position:relative;display:flex;justify-content:center;align-items:flex-end;gap:2px;margin-top:-64px;padding:0 24px;z-index:2}
+.chars img{width:31%;filter:drop-shadow(0 8px 12px rgba(70,40,160,.18));animation:bob 3.2s ease-in-out infinite}
+.chars img:nth-child(2){width:34%;animation-delay:-1s}
+.chars img:nth-child(3){animation-delay:-2s}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.hero-body{padding:22px 20px 40px;text-align:center}
+.hero-body h1{font-size:26px;font-weight:800;letter-spacing:-.035em;line-height:1.35;text-wrap:balance}
+.hero-body h1 em{font-style:normal;color:var(--v1)}
+.hero-body p{color:var(--sub);font-size:15px;margin-top:8px}
+.cta{display:flex;gap:10px;margin-top:24px}
+.btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:54px;border-radius:16px;font-weight:700;font-size:16px;transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:linear-gradient(135deg,var(--v1),var(--v3));color:#fff;box-shadow:0 10px 24px rgba(91,59,217,.35)}
+.btn.sec{background:#fff;color:var(--v1);border:1.5px solid var(--line)}
+.btn svg{width:18px;height:18px}
+
+/* INFO */
+.info{padding-top:0}
+.card{background:#fff;border-radius:22px;padding:22px;box-shadow:0 10px 30px rgba(91,59,217,.08)}
+.info dl{display:grid;grid-template-columns:72px 1fr;row-gap:16px;align-items:baseline}
+.info dt{font-size:13px;font-weight:700;color:var(--v2)}
+.info dd{font-size:16px;font-weight:600;line-height:1.5}
+.info dd small{display:block;font-size:14px;font-weight:500;color:var(--sub)}
+.info dd b{color:var(--pink)}
+
+/* PROGRAM */
+.prog{background:linear-gradient(180deg,var(--l2),#fff)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px}
+.pc{background:#fff;border-radius:20px;padding:18px 16px 20px;border:1px solid var(--line);position:relative;overflow:hidden}
+.pc .ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;margin-bottom:14px}
+.pc h3{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.pc p{font-size:13.5px;color:var(--sub);line-height:1.55;margin-top:6px}
+.pc.wide{grid-column:1/-1;background:linear-gradient(135deg,var(--v1),var(--v3));color:#fff;border:0;display:flex;gap:14px;align-items:center}
+.pc.wide p{color:rgba(255,255,255,.85)}
+.pc.wide .ic{background:rgba(255,255,255,.18);flex:none;margin:0}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--l1);color:var(--v1);margin-top:10px}
+
+/* LUCKY */
+.lucky{background:linear-gradient(160deg,#6A45E0 0%,#8C66F0 55%,#C29BF5 100%);color:#fff;position:relative}
+.lucky .eyebrow{color:#FFD6EC}
+.lucky .lead{color:rgba(255,255,255,.85)}
+.lucky .badge{display:inline-block;background:#fff;color:var(--pink);font-weight:800;font-size:13px;padding:6px 12px;border-radius:999px;margin-bottom:14px}
+.steps{margin-top:26px;display:flex;flex-direction:column;gap:12px;counter-reset:s}
+.step{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:18px 18px 18px 64px;position:relative;backdrop-filter:blur(4px)}
+.step::before{counter-increment:s;content:counter(s);position:absolute;left:18px;top:18px;width:32px;height:32px;border-radius:50%;
+  background:#fff;color:var(--v1);font-weight:800;display:grid;place-items:center;font-size:15px}
+.step h3{font-size:17px;font-weight:800}
+.step p{font-size:14px;line-height:1.55;color:rgba(255,255,255,.88);margin-top:4px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tags button{font:inherit;font-size:15px;font-weight:700;color:var(--v1);background:#fff;border:0;border-radius:12px;padding:9px 13px;cursor:pointer;transition:transform .15s}
+.tags button:active{transform:scale(.95)}
+.copyall{font:inherit;margin-top:10px;font-size:13px;font-weight:600;color:#fff;background:none;border:1px dashed rgba(255,255,255,.6);border-radius:10px;padding:7px 12px;cursor:pointer}
+.prize{margin-top:18px;background:#fff;color:var(--ink);border-radius:20px;padding:18px;display:flex;gap:14px;align-items:center}
+.prize img{width:74px;flex:none}
+.prize b{font-size:16px;display:block;margin-bottom:3px}
+.prize span{font-size:13.5px;color:var(--sub);line-height:1.5}
+.lucky .note{font-size:12px;color:rgba(255,255,255,.7);margin-top:12px}
+
+/* BRANDS */
+.brands{background:#fff}
+.map{margin-top:22px;background:var(--l2);border-radius:22px;padding:14px;border:1px solid var(--line)}
+.map svg{width:100%;height:auto;display:block}
+.map .booth rect{fill:#fff;stroke:#C9B6F5;stroke-width:1;transition:fill .2s}
+.map .booth text{font-size:8px;font-weight:700;fill:var(--v1);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.map .booth{cursor:pointer}
+.map .booth.on rect{fill:var(--v1);stroke:var(--v1)}
+.map .booth.on text{fill:#fff}
+.map .zl{font-size:8.5px;font-weight:700;text-anchor:middle;dominant-baseline:central}
+.sel{margin-top:12px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:700;text-align:center}
+.sel .n{background:var(--v1);color:#fff;border-radius:8px;padding:3px 8px;font-size:13px}
+.sel.empty{color:var(--sub);font-weight:500;font-size:13.5px}
+.logos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.lg{position:relative;background:#fff;border:1.5px solid var(--line);border-radius:16px;height:92px;display:grid;place-items:center;padding:18px 14px 10px;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .15s}
+.lg:active{transform:scale(.97)}
+.lg img{max-height:46px;max-width:100%;object-fit:contain}
+.lg .no{position:absolute;top:7px;left:8px;font-size:11px;font-weight:800;color:var(--v2);background:var(--l1);border-radius:6px;padding:1px 6px}
+.lg.on{border-color:var(--v1);box-shadow:0 6px 18px rgba(91,59,217,.2)}
+
+/* WAY */
+.way{background:var(--l2)}
+.way .card{margin-top:22px;padding:0;overflow:hidden}
+.way .top{background:url(assets/kv.webp) center 100%/cover;height:150px;position:relative}
+.way .top::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0) 40%,#fff)}
+.way .body{padding:6px 22px 22px}
+.way .place{font-size:19px;font-weight:800}
+.way .when{font-size:14px;color:var(--sub);margin-top:6px;line-height:1.6}
+
+footer{background:var(--ink);color:rgba(255,255,255,.75);padding:36px 20px 44px;font-size:13px;line-height:1.9}
+footer .logo{color:#fff;font-weight:800;font-size:16px;letter-spacing:.02em;margin-bottom:14px}
+footer b{color:#fff;font-weight:600;display:inline-block;width:52px}
+footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:rgba(36,24,74,.92);color:#fff;font-size:14px;font-weight:600;
+  padding:12px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.25s;z-index:9}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.fx{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
+.fx.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.fx{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <img class="kv" src="assets/kv.webp" alt="인천에서 만나는 뷰티 BEAUTY Wave in INCHEON · 2026.10.23 FRI – 10.25 SUN · 송도 트리플스트리트 A동 광장" width="1400" height="1400">
+  <div class="free"><i></i>무료입장</div>
+  <div class="chars">
+    <img src="assets/bermi.webp" alt="" width="543" height="720">
+    <img src="assets/komi.webp" alt="" width="553" height="720">
+    <img src="assets/aeini.webp" alt="" width="492" height="720">
+  </div>
+  <div class="hero-body">
+    <h1>인천 뷰티 브랜드 <em>20곳</em>을<br>송도에서 한번에 만나보세요</h1>
+    <p>체험부터 LIVE, 럭키드로우까지 사흘간의 뷰티 팝업</p>
+    <div class="cta">
+      <a class="btn pri" href="https://naver.me/xtgBSs8t" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>길찾기</a>
+      <a class="btn sec" href="#brands">참여기업 보기</a>
+    </div>
+  </div>
+</header>
+
+<section class="info">
+  <div class="card fx">
+    <dl>
+      <dt>일시</dt><dd>2026. 10. 23(금) – 10. 25(일)</dd>
+      <dt>운영시간</dt><dd>금 13:00 – 20:00<small>토 · 일 10:30 – 20:30</small></dd>
+      <dt>장소</dt><dd>송도 트리플스트리트 A동 광장</dd>
+      <dt>입장료</dt><dd><b>무료</b> · 누구나 자유롭게 방문하세요</dd>
+    </dl>
+  </div>
+</section>
+
+<section class="prog">
+  <div class="eyebrow fx">PROGRAM</div>
+  <h2 class="fx">현장에서 즐길 거리</h2>
+  <div class="grid2">
+    <div class="pc wide fx">
+      <div class="ic">🎁</div>
+      <div><h3>꽝 없는 럭키드로우</h3><p>SNS 인증하고 룰렛을 돌리면<br>참여기업 제품을 드려요</p></div>
+    </div>
+    <div class="pc fx">
+      <div class="ic" style="background:#F1E9FF">💄</div>
+      <h3>브랜드 부스</h3>
+      <p>인천 뷰티기업 20곳의 제품을 직접 보고 체험해 보세요</p>
+      <span class="tag">현장 특별 혜택</span>
+    </div>
+    <div class="pc fx">
+      <div class="ic" style="background:#FFE6F2">🎥</div>
+      <h3>LIVE 존</h3>
+      <p>브랜드가 직접 진행하는 라이브 시연 프로그램</p>
+      <span class="tag">3일간 진행</span>
+    </div>
+    <div class="pc fx" style="grid-column:1/-1;display:flex;gap:14px;align-items:center">
+      <div class="ic" style="background:#E5F3FA;flex:none;margin:0">📸</div>
+      <div><h3>포토존</h3><p>BEAUTY WAVE 포토월에서 인생샷 남기고, 럭키드로우까지 참여하세요</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="lucky" id="lucky">
+  <span class="badge fx">꽝 없음!</span>
+  <div class="eyebrow fx">SNS EVENT</div>
+  <h2 class="fx">사진 한 장으로<br>럭키드로우 참여하기</h2>
+  <div class="steps">
+    <div class="step fx"><h3>사진 찍기</h3><p>행사장 또는 포토존에서 마음에 드는 사진을 찍어 주세요</p></div>
+    <div class="step fx"><h3>해시태그와 함께 SNS 업로드</h3><p>아래 해시태그 3개를 꼭 넣어 주세요<br><span style="opacity:.75">태그를 누르면 바로 복사돼요</span></p>
+      <div class="tags">
+        <button data-t="#뷰웨인">#뷰웨인</button><button data-t="#인천">#인천</button><button data-t="#인천뷰티팝업">#인천뷰티팝업</button>
+      </div>
+      <button class="copyall" data-t="#뷰웨인 #인천 #인천뷰티팝업">해시태그 한번에 복사</button>
+    </div>
+    <div class="step fx"><h3>이벤트데스크에서 룰렛 돌리기</h3><p>게시물을 보여주고 해시태그 확인이 끝나면 룰렛을 돌려요</p></div>
+  </div>
+  <div class="prize fx">
+    <img src="assets/komi.webp" alt="" width="553" height="720">
+    <div><b>경품은 참여기업 제품!</b><span>꽝 없이 모두에게 선물을 드려요</span></div>
+  </div>
+  <p class="note">※ 경품은 일자별 준비 수량이 소진되면 조기 마감될 수 있습니다.</p>
+</section>
+
+<section class="brands" id="brands">
+  <div class="eyebrow fx">BRANDS &amp; MAP</div>
+  <h2 class="fx">참여기업 20곳과 부스 위치</h2>
+  <p class="lead fx">로고나 부스 번호를 누르면 위치를 바로 확인할 수 있어요</p>
+  <div class="map fx"><svg id="map" viewBox="0 0 300 306" role="img" aria-label="부스 배치도"></svg>
+    <div class="sel empty" id="sel">부스를 선택해 보세요</div>
+  </div>
+  <div class="logos" id="logos"></div>
+</section>
+
+<section class="way" id="way">
+  <div class="eyebrow fx">LOCATION</div>
+  <h2 class="fx">오시는 길</h2>
+  <div class="card fx">
+    <div class="top"></div>
+    <div class="body">
+      <div class="place">송도 트리플스트리트 A동 광장</div>
+      <div class="when">10.23(금) 13:00 – 20:00<br>10.24(토) – 25(일) 10:30 – 20:30</div>
+      <div class="cta" style="margin-top:18px">
+        <a class="btn pri" href="https://naver.me/xtgBSs8t" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>네이버 지도로 길찾기</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="logo">BEAUTY WAVE in INCHEON 2026</div>
+  <div><b>주최</b>인천광역시</div>
+  <div><b>주관</b>인천테크노파크</div>
+  <div><b>운영팀</b>주식회사 웰리더</div>
+  <div class="c">© 2026 BEAUTY WAVE in INCHEON</div>
+</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const B=[["에이지앤뷰티","agebeauty"],["리블로셀","reblocell"],["씨앤씨솔루션","cnc"],["해시태그우디","hashtagwoody"],["비티바이오테라퓨틱스","btbio"],
+["아이테르글로벌","aiter"],["더멀매트릭스","dermatrix"],["알엔엘케이코스메틱","rnlk"],["스킨온유","skinonyou"],["아모르브","amorb"],
+["셀비오코스메틱","cellbio"],["갈렙이앤씨","galeb"],["이레코스메틱","irecos"],["로아카이브","loarchive"],["모스바이오","mosbio"],
+["하현","hahyun"],["스킨랩코리아","skinlab"],["웰빙헬스팜","wellbeing"],["디벨니티","develnity"],["비옴바이오랩스","biom"]];
+const ns="http://www.w3.org/2000/svg",svg=document.getElementById('map');
+function el(t,a,p){const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e}
+// layout (based on 운영계획 배치도: 하단 4 · 좌측 12 · 상단 4)
+const W=34,H=17,G=2,X0=8,Y0=24;
+const pos={};
+for(let i=0;i<4;i++)pos[17+i]=[X0+i*(W+G),Y0];                 // 상단 17~20 (좌→우)
+for(let i=0;i<12;i++)pos[16-i]=[X0,Y0+(H+G)*(i+1)];             // 좌측 16~5 (위→아래)
+for(let i=0;i<4;i++)pos[4-i]=[X0+i*(W+G),Y0+(H+G)*13];          // 하단 4~1 (좌→우)
+// zones
+el('rect',{x:4,y:4,width:292,height:292,rx:10,fill:'#fff',stroke:'#E3D8FA'});
+el('text',{x:96,y:13,class:'zl',fill:'#9A8FBF'}).textContent='건물 측 · 매장 전면';
+el('rect',{x:214,y:24,width:78,height:264,rx:6,fill:'#FBF5E6'});
+el('text',{x:253,y:148,class:'zl',fill:'#B8955A'}).textContent='자유통행로';
+el('rect',{x:60,y:70,width:84,height:96,rx:8,fill:'#EFE7FF',stroke:'#A07CF0','stroke-dasharray':'3 2'});
+el('text',{x:102,y:112,class:'zl',fill:'#5B3BD9','font-size':11}).textContent='LIVE 존';
+el('text',{x:102,y:126,class:'zl',fill:'#8C7FBF','font-size':7.5}).textContent='라이브 시연';
+el('rect',{x:152,y:132,width:56,height:62,rx:8,fill:'#FFE9F3',stroke:'#E8559B','stroke-width':.8});
+el('text',{x:180,y:158,class:'zl',fill:'#E8559B','font-size':10}).textContent='포토존';
+el('text',{x:180,y:172,class:'zl',fill:'#E8559B','font-size':7}).textContent='포토월';
+el('rect',{x:112,y:226,width:62,height:18,rx:5,fill:'#5B3BD9'});
+el('text',{x:143,y:235,class:'zl',fill:'#fff','font-size':7.5}).textContent='이벤트데스크 🎁';
+el('rect',{x:182,y:252,width:28,height:28,rx:4,fill:'#24184A'});
+el('text',{x:196,y:266,class:'zl',fill:'#fff','font-size':6}).textContent='운영';
+el('rect',{x:156,y:290,width:52,height:12,rx:6,fill:'#24184A'});
+el('text',{x:182,y:296,class:'zl',fill:'#fff','font-size':7}).textContent='▲ 주출입구';
+const gs={};
+for(let n=1;n<=20;n++){
+  const g=el('g',{class:'booth','data-n':n,tabindex:0,role:'button','aria-label':`${n}번 ${B[n-1][0]}`});
+  el('rect',{x:pos[n][0],y:pos[n][1],width:W,height:H,rx:3},g);
+  el('text',{x:pos[n][0]+W/2,y:pos[n][1]+H/2},g).textContent=String(n).padStart(2,'0');
+  g.addEventListener('click',()=>pick(n,false));gs[n]=g;
+}
+// logos
+const L=document.getElementById('logos'),ls={};
+B.forEach(([nm,f],i)=>{const n=i+1,d=document.createElement('div');d.className='lg fx';
+  d.innerHTML=`<span class="no">${String(n).padStart(2,'0')}</span><img src="assets/logo_${f}.webp" alt="${nm}" loading="lazy">`;
+  d.onclick=()=>pick(n,true);L.appendChild(d);ls[n]=d;});
+const sel=document.getElementById('sel');let cur=0;
+function pick(n,fromLogo){
+  if(cur){gs[cur].classList.remove('on');ls[cur].classList.remove('on')}
+  cur=n;gs[n].classList.add('on');ls[n].classList.add('on');
+  sel.className='sel';sel.innerHTML=`<span class="n">${String(n).padStart(2,'0')}</span>${B[n-1][0]}`;
+  if(fromLogo)document.querySelector('.map').scrollIntoView({behavior:'smooth',block:'center'});
+}
+// copy
+const toast=document.getElementById('toast');let tt;
+function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove('show'),1600)}
+document.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',async()=>{
+  const t=b.dataset.t;try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}
+  show(`${t} 복사됐어요`)}));
+// reveal
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.fx').forEach(e=>io.observe(e));
+</script>
+</body>
+</html>
