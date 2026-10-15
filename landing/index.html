@@ -114,14 +114,14 @@ a.pc{color:inherit;display:block}
 .map{margin-top:22px;background:var(--l2);border-radius:22px;padding:8px;border:1px solid var(--line)}
 .map svg{border-radius:16px}
 .map svg{width:100%;height:auto;display:block}
-.map .booth .bx{fill:url(#bf);transition:fill .2s;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25))}
+.map .booth .bx{fill:#fff;stroke:#C9B6F5;stroke-width:.8;transition:fill .2s}
 .map .booth text{dominant-baseline:central;pointer-events:none}
-.map .bn{font-family:Georgia,"Times New Roman",serif;font-size:7.5px;fill:#B8955A}
-.map .bt{font-weight:800;fill:#3A1966;letter-spacing:-.02em}
+.map .bn{font-size:6.5px;font-weight:800;fill:#7A55E6}
+.map .bt{font-weight:700;fill:#24184A;letter-spacing:-.02em}
 .map .booth{cursor:pointer}
-.map .booth.on .bx{fill:url(#bon)}
+.map .booth.on .bx{fill:url(#bon);stroke:#5B3BD9}
 .map .booth.on .bn{fill:#fff}
-.map .booth.on .bt{fill:#2C0B4E}
+.map .booth.on .bt{fill:#fff}
 .map .zl{font-weight:700;text-anchor:middle;dominant-baseline:central}
 .sel{margin-top:12px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:700;text-align:center}
 .sel img{height:26px;width:auto;max-width:46%;object-fit:contain}
@@ -315,56 +315,49 @@ const B=[["에이지앤뷰티","agebeauty"],["리블로셀","reblocell"],["씨�
 ["하현","hahyun"],["스킨랩코리아","skinlab"],["웰빙헬스팜","wellbeing"],["디벨니티","develnity"],["비옴바이오랩스","biom"]];
 const ns="http://www.w3.org/2000/svg",svg=document.getElementById('map');
 function el(t,a,p){const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e}
-// 부스 배치도 (현장 배치도 기준)
+// 부스 배치도 (현장 배치도 기준 · 사이트 톤)
 svg.setAttribute('viewBox','0 0 453 342');
 const defs=el('defs',{});
-defs.innerHTML=`<linearGradient id="mbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2C0B4E"/><stop offset=".55" stop-color="#4A1A7A"/><stop offset="1" stop-color="#5E2794"/></linearGradient>
-<pattern id="mst" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)"><rect width="6" height="6" fill="none"/><line x1="0" y1="0" x2="0" y2="6" stroke="#fff" stroke-opacity=".035" stroke-width="2"/></pattern>
-<linearGradient id="bf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EDE3F7"/></linearGradient>
-<linearGradient id="bon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E9C77E"/><stop offset="1" stop-color="#B98E45"/></linearGradient>`;
+defs.innerHTML=`<linearGradient id="mbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBF8FF"/><stop offset="1" stop-color="#EEE5FF"/></linearGradient>
+<linearGradient id="bon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B3BD9"/><stop offset="1" stop-color="#A07CF0"/></linearGradient>
+<linearGradient id="lz" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7A55E6"/><stop offset="1" stop-color="#A07CF0"/></linearGradient>`;
 el('rect',{x:0,y:0,width:453,height:342,rx:14,fill:'url(#mbg)'});
-el('rect',{x:0,y:0,width:453,height:342,rx:14,fill:'url(#mst)'});
 const T=(x,y,t,o={})=>{const e=el('text',Object.assign({x,y,class:'zl'},o));e.textContent=t;return e};
 // 상단 · 주변
-el('rect',{x:35,y:2,width:331,height:13,rx:4,fill:'#fff','fill-opacity':.06});
-T(200,8.5,'건물 측 · 매장 전면',{fill:'#fff','fill-opacity':.55,'font-size':6});
-T(387,7.5,'현대아울렛',{fill:'#fff','font-size':6.5,'font-weight':800});
-el('circle',{cx:441,cy:27,r:9.5,fill:'none',stroke:'#fff','stroke-opacity':.25});
-T(441,22.5,'N',{fill:'#E9C77E','font-size':5.5});
-el('path',{d:'M441 25 l3.2 6 h-6.4z',fill:'#E9C77E'});
-T(20,165,'H&M · 무신사 · 점용 한계선',{fill:'#fff','fill-opacity':.6,'font-size':5.5,transform:'rotate(-90 20 165)'});
-T(441,170,'에스컬레이터 · ZARA · 굴다리 방면',{fill:'#fff','fill-opacity':.6,'font-size':5.5,transform:'rotate(90 441 170)'});
+el('rect',{x:35,y:2,width:331,height:13,rx:4,fill:'#E9DFFC'});
+T(200,8.5,'건물 측 · 매장 전면',{fill:'#8C7FBF','font-size':6});
+T(387,7.5,'현대아울렛',{fill:'#24184A','font-size':6.5,'font-weight':800});
+el('circle',{cx:441,cy:27,r:9.5,fill:'#fff',stroke:'#D8CBF7'});
+T(441,22.5,'N',{fill:'#7A55E6','font-size':5.5});
+el('path',{d:'M441 25 l3.2 6 h-6.4z',fill:'#7A55E6'});
+T(20,165,'H&M · 무신사 · 점용 한계선',{fill:'#9A8FBF','font-size':5.5,transform:'rotate(-90 20 165)'});
+T(441,170,'에스컬레이터 · ZARA · 굴다리 방면',{fill:'#9A8FBF','font-size':5.5,transform:'rotate(90 441 170)'});
 // 행사장 영역
-el('rect',{x:35,y:17,width:389,height:298,rx:6,fill:'#fff','fill-opacity':.035,stroke:'#fff','stroke-opacity':.12});
+el('rect',{x:35,y:17,width:389,height:298,rx:6,fill:'#fff',stroke:'#E3D8FA'});
 // 자유통행로
-el('path',{d:'M366 18 L408 18 L424 314 L395 314 Z',fill:'#fff','fill-opacity':.08,stroke:'#C9A86A','stroke-opacity':.7,'stroke-dasharray':'3 2'});
-T(395,141,'자유통행로',{fill:'#E9C77E','font-size':6.5,'font-weight':800});
-T(395,151,'6.0 M',{fill:'#fff','fill-opacity':.6,'font-size':5});
+el('path',{d:'M366 18 L408 18 L424 314 L395 314 Z',fill:'#F3EEFF',stroke:'#C9B6F5','stroke-dasharray':'3 2'});
+T(395,146,'자유통행로',{fill:'#8C7FBF','font-size':6.5,'font-weight':800});
 // LIVE 존
-el('rect',{x:158,y:75,width:125,height:133,rx:4,fill:'#fff','fill-opacity':.04,stroke:'#fff','stroke-opacity':.4,'stroke-dasharray':'3 2'});
-el('rect',{x:188,y:84,width:64,height:8.5,rx:1.5,fill:'#14061F'});
-T(220,88.5,'70인치 TV',{fill:'#fff','fill-opacity':.8,'font-size':4.6});
-T(220,101.5,'LIVE STAGE',{fill:'#fff','font-size':7,'font-family':'Georgia,serif','letter-spacing':1.6,'font-weight':400});
-el('rect',{x:182,y:109,width:76,height:9,rx:1.5,fill:'#9A78D4','fill-opacity':.75});
-T(220,113.7,'테이블 3,600',{fill:'#fff','font-size':4.6});
-el('rect',{x:173,y:121,width:95,height:75,rx:4,fill:'#fff','fill-opacity':.13});
-T(220,153,'LIVE 존',{fill:'#fff','font-size':10,'font-weight':800});
-T(220,166,'관람 스탠딩',{fill:'#fff','fill-opacity':.6,'font-size':5});
+el('rect',{x:158,y:75,width:125,height:133,rx:6,fill:'#F6F1FF',stroke:'#A07CF0','stroke-dasharray':'3 2'});
+el('rect',{x:188,y:84,width:64,height:6,rx:3,fill:'#24184A'});
+T(220,101.5,'LIVE STAGE',{fill:'#5B3BD9','font-size':7,'letter-spacing':1.6,'font-weight':800});
+el('rect',{x:182,y:109,width:76,height:7,rx:3.5,fill:'#C9B6F5'});
+el('rect',{x:173,y:121,width:95,height:75,rx:6,fill:'url(#lz)'});
+T(220,154,'LIVE 존',{fill:'#fff','font-size':10.5,'font-weight':800});
+T(220,167,'관람 스탠딩',{fill:'#fff','fill-opacity':.8,'font-size':5.2});
 // 포토존
-el('rect',{x:295,y:180,width:63,height:70,rx:4,fill:'#fff','fill-opacity':.12,stroke:'#C9A86A','stroke-opacity':.8});
-T(326.5,210,'포토존',{fill:'#E9C77E','font-size':7.5,'font-weight':800});
-T(326.5,221,'백월 W5,000',{fill:'#fff','fill-opacity':.6,'font-size':4.8});
+el('rect',{x:295,y:180,width:63,height:70,rx:6,fill:'#FFE9F3',stroke:'#E8559B','stroke-width':.8});
+T(326.5,215,'포토존',{fill:'#E8559B','font-size':8,'font-weight':800});
 // 이벤트데스크 · 운영사무국
-el('rect',{x:301,y:273,width:49,height:14,rx:2,fill:'#C9A86A'});
-T(325.5,280.2,'이벤트데스크',{fill:'#2C0B4E','font-size':5.2,'font-weight':800});
-el('rect',{x:354,y:265,width:35,height:34,rx:4,fill:'#160725'});
-T(371.5,279,'운영사무국',{fill:'#fff','font-size':5.2,'font-weight':800});
-T(371.5,289,'3×3',{fill:'#fff','fill-opacity':.6,'font-size':4.6});
+el('rect',{x:301,y:273,width:49,height:14,rx:3,fill:'#5B3BD9'});
+T(325.5,280.2,'이벤트데스크',{fill:'#fff','font-size':5.2,'font-weight':800});
+el('rect',{x:354,y:265,width:35,height:34,rx:5,fill:'#24184A'});
+T(371.5,282,'운영사무국',{fill:'#fff','font-size':5.2,'font-weight':800});
 // 주출입구 · 횡단보도
-el('rect',{x:301,y:310,width:58,height:10,rx:2,fill:'#14061F'});
-T(330,315.2,'주출입구 4.0 M',{fill:'#fff','font-size':5,'font-weight':800});
-for(let i=0;i<9;i++)el('rect',{x:272+i*11,y:325,width:7,height:9,rx:1.5,fill:'#fff','fill-opacity':.12});
-T(384,330,'횡단보도',{fill:'#fff','fill-opacity':.5,'font-size':5});
+el('rect',{x:301,y:310,width:58,height:10,rx:5,fill:'#24184A'});
+T(330,315.2,'▲ 주출입구',{fill:'#fff','font-size':5.2,'font-weight':800});
+for(let i=0;i<9;i++)el('rect',{x:272+i*11,y:325,width:7,height:9,rx:1.5,fill:'#D8CBF7'});
+T(384,330,'횡단보도',{fill:'#9A8FBF','font-size':5});
 // 부스
 const BW=62,BH=18,pos={};
 [[17,40],[18,105],[19,170],[20,235]].forEach(([n,x])=>pos[n]=[x,21]);
@@ -377,8 +370,8 @@ for(let n=1;n<=20;n++){
   el('rect',{x,y,width:BW,height:BH,rx:3,class:'bx'},g);
   const no=el('text',{x:x+4,y:y+BH/2+.3,class:'bn'},g);no.textContent=String(n).padStart(2,'0');
   const fs=nm.length<=5?6:nm.length<=7?5.2:4.3;
-  const t=el('text',{x:x+19,y:y+BH/2+.3,class:'bt','font-size':fs},g);t.textContent=nm;
-  if(nm.length>=9)t.setAttribute('textLength',40),t.setAttribute('lengthAdjust','spacingAndGlyphs');
+  const t=el('text',{x:x+17,y:y+BH/2+.3,class:'bt','font-size':fs},g);t.textContent=nm;
+  if(nm.length>=9)t.setAttribute('textLength',41),t.setAttribute('lengthAdjust','spacingAndGlyphs');
   g.addEventListener('click',()=>pick(n,false));gs[n]=g;
 }
 // logos
