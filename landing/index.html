@@ -118,18 +118,32 @@ section{padding:56px 20px}
 a.pc{color:inherit;display:block}
 /* BRANDS */
 .brands{background:#fff}
-.map{margin-top:22px;background:var(--l2);border-radius:22px;padding:8px;border:1px solid var(--line)}
-.map svg{border-radius:16px}
-.map svg{width:100%;height:auto;display:block}
-.map .booth .bx{fill:#fff;stroke:#C9B6F5;stroke-width:.8;transition:fill .2s}
-.map .booth text{dominant-baseline:central;pointer-events:none}
-.map .bn{font-size:6.5px;font-weight:800;fill:#7A55E6}
-.map .bt{font-weight:700;fill:#24184A;letter-spacing:-.02em}
-.map .booth{cursor:pointer}
-.map .booth.on .bx{fill:url(#bon);stroke:#5B3BD9}
-.map .booth.on .bn{fill:#fff}
-.map .booth.on .bt{fill:#fff}
-.map .zl{font-weight:700;text-anchor:middle;dominant-baseline:central}
+.map{margin:22px -20px 0;background:var(--l2);padding:6px 4px 4px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+#map{border-radius:10px}
+.zoom-btn{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px 16px 10px;height:42px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--v1);font:inherit;font-size:14px;font-weight:700;cursor:pointer;width:calc(100% - 32px)}
+.zoom-btn svg{width:16px;height:16px;flex:none}
+.mz{position:fixed;inset:0;z-index:20;background:rgba(36,24,74,.92);display:none;flex-direction:column}
+.mz.open{display:flex}
+.mz-top{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:#fff;font-size:13px;font-weight:600;gap:10px}
+.mz-top button{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:22px;line-height:1;cursor:pointer}
+.mz-stage{flex:1;position:relative;overflow:hidden;touch-action:none}
+.mz-pan{position:absolute;left:50%;top:50%;transform-origin:0 0}
+.mz-rot{transform-origin:center}
+.mz-rot svg{display:block;width:100%;height:auto;border-radius:10px}
+.mz-cap{min-height:56px;margin:0 14px 14px;background:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:700;color:var(--ink);padding:8px}
+.mz-cap img{height:26px;width:auto;max-width:46%;object-fit:contain}
+.mz-cap i{width:1.5px;height:18px;background:#C9B6F5}
+.mz-cap.empty{color:var(--sub);font-weight:500;font-size:13.5px}
+#map{width:100%;height:auto;display:block}
+#map .booth .bx{fill:#fff;stroke:#C9B6F5;stroke-width:.8;transition:fill .2s}
+#map .booth text{dominant-baseline:central;pointer-events:none}
+#map .bn{font-size:7.2px;font-weight:800;fill:#7A55E6}
+#map .bt{font-weight:700;fill:#24184A;letter-spacing:-.02em}
+#map .booth{cursor:pointer}
+#map .booth.on .bx{fill:url(#bon);stroke:#5B3BD9}
+#map .booth.on .bn{fill:#fff}
+#map .booth.on .bt{fill:#fff}
+#map .zl{font-weight:700;text-anchor:middle;dominant-baseline:central}
 .sel{margin-top:12px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:700;text-align:center}
 .sel img{height:26px;width:auto;max-width:46%;object-fit:contain}
 .sel i{width:1.5px;height:18px;background:#C9B6F5;flex:none}
@@ -197,7 +211,7 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
   <div class="card fx">
     <dl>
       <dt>일시</dt><dd>2026. 10. 23(금) – 10. 25(일)</dd>
-      <dt>운영시간</dt><dd>10:30 – 20:00</dd>
+      <dt>운영시간</dt><dd>10.23(금) 13:00 – 20:00<small>10.24(토) – 25(일) 10:30 – 20:00</small></dd>
       <dt>장소</dt><dd>송도 트리플스트리트 A동 광장</dd>
       <dt>입장료</dt><dd><b>무료</b> · 누구나 자유롭게 방문하세요</dd>
     </dl>
@@ -283,7 +297,8 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
   <div class="eyebrow fx">BRANDS &amp; MAP</div>
   <h2 class="fx">참여기업 20곳과 부스 위치</h2>
   <p class="lead fx">로고나 부스 번호를 누르면 위치를 바로 확인할 수 있어요</p>
-  <div class="map fx"><svg id="map" viewBox="0 0 453 342" role="img" aria-label="부스 배치도"></svg>
+  <div class="map fx"><div id="mapHome"><svg id="map" viewBox="19 0 422 342" role="img" aria-label="부스 배치도"></svg></div>
+    <button type="button" class="zoom-btn" id="zoomOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M11 8v6M8 11h6"/></svg>배치도 크게 보기</button>
     <div class="sel empty" id="sel">부스를 선택해 보세요</div>
   </div>
   <div class="logos" id="logos"></div>
@@ -296,7 +311,7 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
     <div class="top"></div>
     <div class="body">
       <div class="place">송도 트리플스트리트 A동 광장</div>
-      <div class="when">10.23(금) – 10.25(일) 10:30 – 20:00</div>
+      <div class="when">10.23(금) 13:00 – 20:00<br>10.24(토) – 25(일) 10:30 – 20:00</div>
       <div class="cta" style="margin-top:18px">
         <a class="btn pri" href="https://naver.me/xtgBSs8t" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>네이버 지도로 길찾기</a>
@@ -321,6 +336,11 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
   <div class="c">© 2026 BEAUTY WAVE in INCHEON</div>
 </footer>
 </div>
+<div class="mz" id="mz" role="dialog" aria-modal="true" aria-label="부스 배치도 크게 보기">
+  <div class="mz-top"><span>두 손가락으로 확대 · 부스를 누르면 기업명이 보여요</span><button type="button" id="zoomClose" aria-label="닫기">×</button></div>
+  <div class="mz-stage" id="mzStage"><div class="mz-pan" id="mzPan"><div class="mz-rot" id="mzRot"></div></div></div>
+  <div class="mz-cap empty" id="mzCap">부스를 선택해 보세요</div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -331,7 +351,7 @@ const B=[["에이지앤뷰티","agebeauty"],["리블로셀","reblocell"],["씨�
 const ns="http://www.w3.org/2000/svg",svg=document.getElementById('map');
 function el(t,a,p){const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e}
 // 부스 배치도 (현장 배치도 기준 · 사이트 톤)
-svg.setAttribute('viewBox','0 0 453 342');
+svg.setAttribute('viewBox','19 0 422 342');
 const defs=el('defs',{});
 defs.innerHTML=`<linearGradient id="mbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBF8FF"/><stop offset="1" stop-color="#EEE5FF"/></linearGradient>
 <linearGradient id="bon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B3BD9"/><stop offset="1" stop-color="#A07CF0"/></linearGradient>
@@ -340,13 +360,10 @@ el('rect',{x:0,y:0,width:453,height:342,rx:14,fill:'url(#mbg)'});
 const T=(x,y,t,o={})=>{const e=el('text',Object.assign({x,y,class:'zl'},o));e.textContent=t;return e};
 // 상단 · 주변
 el('rect',{x:35,y:2,width:331,height:13,rx:4,fill:'#E9DFFC'});
-T(200,8.5,'건물 측 · 매장 전면',{fill:'#8C7FBF','font-size':6});
+T(200,8.8,'ZARA',{fill:'#5B3BD9','font-size':8.5,'font-weight':800,'letter-spacing':1});
 T(387,7.5,'현대아울렛',{fill:'#24184A','font-size':6.5,'font-weight':800});
-el('circle',{cx:441,cy:27,r:9.5,fill:'#fff',stroke:'#D8CBF7'});
-T(441,22.5,'N',{fill:'#7A55E6','font-size':5.5});
-el('path',{d:'M441 25 l3.2 6 h-6.4z',fill:'#7A55E6'});
-T(20,165,'H&M · 무신사 · 점용 한계선',{fill:'#9A8FBF','font-size':5.5,transform:'rotate(-90 20 165)'});
-T(441,170,'에스컬레이터 · ZARA · 굴다리 방면',{fill:'#9A8FBF','font-size':5.5,transform:'rotate(90 441 170)'});
+T(26.5,165,'무신사',{fill:'#5B3BD9','font-size':8.5,'font-weight':800,'letter-spacing':2,transform:'rotate(-90 26.5 165)'});
+T(433.5,165,'H&M',{fill:'#5B3BD9','font-size':8.5,'font-weight':800,'letter-spacing':1.5,transform:'rotate(90 433.5 165)'});
 // 행사장 영역
 el('rect',{x:35,y:17,width:389,height:298,rx:6,fill:'#fff',stroke:'#E3D8FA'});
 // 자유통행로
@@ -384,9 +401,9 @@ for(let n=1;n<=20;n++){
   const g=el('g',{class:'booth','data-n':n,tabindex:0,role:'button','aria-label':`${n}번 ${nm}`});
   el('rect',{x,y,width:BW,height:BH,rx:3,class:'bx'},g);
   const no=el('text',{x:x+4,y:y+BH/2+.3,class:'bn'},g);no.textContent=String(n).padStart(2,'0');
-  const fs=nm.length<=5?6:nm.length<=7?5.2:4.3;
-  const t=el('text',{x:x+17,y:y+BH/2+.3,class:'bt','font-size':fs},g);t.textContent=nm;
-  if(nm.length>=9)t.setAttribute('textLength',41),t.setAttribute('lengthAdjust','spacingAndGlyphs');
+  const fs=nm.length<=4?7.2:nm.length<=6?6.6:6;
+  const t=el('text',{x:x+16,y:y+BH/2+.3,class:'bt','font-size':fs},g);t.textContent=nm;
+  if(nm.length>=7)t.setAttribute('textLength',43),t.setAttribute('lengthAdjust','spacingAndGlyphs');
   g.addEventListener('click',()=>pick(n,false));gs[n]=g;
 }
 // logos
@@ -399,6 +416,7 @@ function pick(n,fromLogo){
   if(cur){gs[cur].classList.remove('on');ls[cur].classList.remove('on')}
   cur=n;gs[n].classList.add('on');ls[n].classList.add('on');
   sel.className='sel';sel.innerHTML=`<img src="assets/logo_${B[n-1][1]}_t.webp" alt=""><i></i><span>${B[n-1][0]}</span>`;
+  const cap=document.getElementById('mzCap');cap.className='mz-cap';cap.innerHTML=sel.innerHTML;
   if(fromLogo)document.querySelector('.map').scrollIntoView({behavior:'smooth',block:'center'});
 }
 // copy
@@ -410,6 +428,41 @@ document.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',asyn
 // reveal
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
 document.querySelectorAll('.fx').forEach(e=>io.observe(e));
+
+// 배치도 크게 보기 (가로 회전 + 핀치 확대/이동)
+(function(){
+  const mz=document.getElementById('mz'),stage=document.getElementById('mzStage'),pan=document.getElementById('mzPan'),rot=document.getElementById('mzRot'),home=document.getElementById('mapHome'),map=document.getElementById('map');
+  let s=1,tx=0,ty=0,base={w:0,h:0},pts=new Map(),last=null;
+  const apply=()=>{pan.style.transform=`translate(${tx}px,${ty}px) scale(${s})`};
+  function layout(){
+    const W=stage.clientWidth,H=stage.clientHeight,ar=342/422,portrait=H>W;
+    let w,h; // 지도(회전 전) 크기
+    if(portrait){w=Math.min(H-16,(W-16)/ar);h=w*ar;rot.style.width=w+'px';rot.style.transform='rotate(90deg)';base={w:h,h:w};}
+    else{w=Math.min(W-16,(H-16)/ar);h=w*ar;rot.style.width=w+'px';rot.style.transform='none';base={w,h};}
+    rot.style.marginLeft=(-w/2)+'px';rot.style.marginTop=(-h/2)+'px';
+    s=1;tx=0;ty=0;apply();
+  }
+  function open(){rot.appendChild(map);mz.classList.add('open');document.body.style.overflow='hidden';requestAnimationFrame(layout)}
+  function close(){home.appendChild(map);mz.classList.remove('open');document.body.style.overflow=''}
+  document.getElementById('zoomOpen').onclick=open;
+  document.getElementById('zoomClose').onclick=close;
+  home.addEventListener('click',e=>{if(!e.target.closest('.booth'))open()});
+  addEventListener('resize',()=>{if(mz.classList.contains('open'))layout()});
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&mz.classList.contains('open'))close()});
+  const clamp=()=>{s=Math.min(4,Math.max(1,s));const mx=base.w*s/2,my=base.h*s/2;tx=Math.max(-mx,Math.min(mx,tx));ty=Math.max(-my,Math.min(my,ty))};
+  stage.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});last=null});
+  stage.addEventListener('pointermove',e=>{
+    if(!pts.has(e.pointerId))return;const prev=pts.get(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===1){tx+=e.clientX-prev.x;ty+=e.clientY-prev.y;}
+    else if(pts.size===2){const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);const r=stage.getBoundingClientRect();const cx=(a.x+b.x)/2-r.left-r.width/2,cy=(a.y+b.y)/2-r.top-r.height/2;
+      if(last){const k=d/last;const ns=Math.min(4,Math.max(1,s*k));const kk=ns/s;tx=cx-(cx-tx)*kk;ty=cy-(cy-ty)*kk;s=ns;}last=d;}
+    clamp();apply();
+  });
+  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)last=null};
+  stage.addEventListener('pointerup',up);stage.addEventListener('pointercancel',up);
+  stage.addEventListener('wheel',e=>{e.preventDefault();s*=e.deltaY<0?1.15:1/1.15;clamp();apply()},{passive:false});
+  let lastTap=0;stage.addEventListener('pointerup',e=>{const t=Date.now();if(t-lastTap<300&&!e.target.closest('.booth')){s=s>1.5?1:2.2;if(s===1){tx=0;ty=0}clamp();apply()}lastTap=t});
+})();
 </script>
 </body>
 </html>
