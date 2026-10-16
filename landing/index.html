@@ -371,6 +371,7 @@ el('line',{x1:24,y1:105,x2:24,y2:309,stroke:'#9A8FBF','stroke-width':.8,'stroke-
 for(let y=109;y<=305;y+=8)el('line',{x1:24,y1:y,x2:29,y2:y,stroke:'#9A8FBF','stroke-width':.7});
 el('rect',{x:20.5,y:196,width:12,height:22,rx:3,fill:'#fff',stroke:'#D8CBF7','stroke-width':.6});
 T(26.5,207,'난간',{fill:'#6B6290','font-size':5.6,'font-weight':800,transform:'rotate(-90 26.5 207)'});
+el('rect',{x:428,y:21,width:11,height:288,rx:4,fill:'#E9DFFC'});
 T(433.5,165,'H&M',{fill:'#5B3BD9','font-size':8.5,'font-weight':800,'letter-spacing':1.5,transform:'rotate(90 433.5 165)'});
 // 행사장 영역
 el('rect',{x:35,y:17,width:389,height:298,rx:6,fill:'#fff',stroke:'#E3D8FA'});
@@ -386,34 +387,37 @@ el('rect',{x:173,y:121,width:95,height:75,rx:6,fill:'url(#lz)'});
 T(220,154,'LIVE 존',{fill:'#fff','font-size':10.5,'font-weight':800});
 T(220,167,'관람 스탠딩',{fill:'#fff','fill-opacity':.8,'font-size':5.2});
 // 포토존
-el('rect',{x:295,y:180,width:63,height:70,rx:6,fill:'#FFE9F3',stroke:'#E8559B','stroke-width':.8});
-T(326.5,215,'포토존',{fill:'#E8559B','font-size':8,'font-weight':800});
+el('rect',{x:294,y:196,width:63,height:62,rx:6,fill:'#FFE9F3',stroke:'#E8559B','stroke-width':.8});
+T(325.5,227,'포토존',{fill:'#E8559B','font-size':8,'font-weight':800});
 // 이벤트데스크
-el('rect',{x:301,y:273,width:49,height:14,rx:3,fill:'#5B3BD9'});
-T(325.5,280.2,'이벤트데스크',{fill:'#fff','font-size':5.2,'font-weight':800});
+el('rect',{x:301,y:260.5,width:49,height:14,rx:3,fill:'#5B3BD9'});
+T(325.5,267.7,'이벤트데스크',{fill:'#fff','font-size':5.2,'font-weight':800});
 
 // 주출입구 · 횡단보도
-el('rect',{x:301,y:310,width:58,height:10,rx:5,fill:'#24184A'});
-T(330,315.2,'▲ 주출입구',{fill:'#fff','font-size':5.2,'font-weight':800});
-for(let i=0;i<9;i++)el('rect',{x:272+i*11,y:325,width:7,height:9,rx:1.5,fill:'#D8CBF7'});
-T(384,330,'횡단보도',{fill:'#9A8FBF','font-size':5});
+el('rect',{x:343,y:310,width:50,height:10,rx:5,fill:'#24184A'});
+T(368,315.2,'▲ 주출입구',{fill:'#fff','font-size':5.2,'font-weight':800});
+for(let i=0;i<9;i++)el('rect',{x:320+i*11,y:325,width:7,height:9,rx:1.5,fill:'#D8CBF7'});
+T(302,330,'횡단보도',{fill:'#9A8FBF','font-size':5});
 // 횡단보도 건너편: 송도 현대아울렛
-el('rect',{x:272,y:340,width:95,height:13,rx:4,fill:'#E9DFFC'});
-T(319.5,346.8,'현대아울렛',{fill:'#5B3BD9','font-size':7.5,'font-weight':800,'letter-spacing':.5});
+el('rect',{x:320,y:340,width:95,height:13,rx:4,fill:'#E9DFFC'});
+T(367.5,346.8,'현대아울렛',{fill:'#5B3BD9','font-size':7.5,'font-weight':800,'letter-spacing':.5});
 // 부스
-const BW=62,BH=18,pos={};
-[[17,40],[18,105],[19,170],[20,235]].forEach(([n,x])=>pos[n]=[x,21]);
-for(let k=0;k<12;k++)pos[16-k]=[40,21+20.8*(k+1)];
-[[4,40],[3,105],[2,170],[1,235]].forEach(([n,x])=>pos[n]=[x,21+20.8*13]);
+// 좌측 세로줄 16~5 · 상단 17~20 / 하단 4~1 은 세로줄 오른쪽에서 시작
+const BH=18,pos={},bw={};
+const RW=57,RP=61,RX=107;
+[17,18,19,20].forEach((n,i)=>{pos[n]=[RX+i*RP,21];bw[n]=RW});
+for(let k=0;k<12;k++){pos[16-k]=[40,42+20.33*k];bw[16-k]=62}
+[4,3,2,1].forEach((n,i)=>{pos[n]=[RX+i*RP,291];bw[n]=RW});
 const gs={};
 for(let n=1;n<=20;n++){
   const [x,y]=pos[n],nm=B[n-1][0];
   const g=el('g',{class:'booth','data-n':n,tabindex:0,role:'button','aria-label':`${n}번 ${nm}`});
+  const BW=bw[n];
   el('rect',{x,y,width:BW,height:BH,rx:3,class:'bx'},g);
   const no=el('text',{x:x+4,y:y+BH/2+.3,class:'bn'},g);no.textContent=String(n).padStart(2,'0');
   const fs=nm.length<=4?7.2:nm.length<=6?6.6:6;
   const t=el('text',{x:x+16,y:y+BH/2+.3,class:'bt','font-size':fs},g);t.textContent=nm;
-  if(nm.length>=7)t.setAttribute('textLength',43),t.setAttribute('lengthAdjust','spacingAndGlyphs');
+  const maxT=BW-19;if(nm.length>=7||nm.length*fs>maxT)t.setAttribute('textLength',Math.min(maxT,nm.length*fs)),t.setAttribute('lengthAdjust','spacingAndGlyphs');
   g.addEventListener('click',()=>pick(n,false));gs[n]=g;
 }
 // logos
