@@ -64,6 +64,8 @@ section{padding:56px 20px}
 .info dd{font-size:16px;font-weight:600;line-height:1.5}
 .info dd small{display:block;font-size:14px;font-weight:500;color:var(--sub)}
 .info dd b{color:var(--pink)}
+.info dd.hrs span{display:block;white-space:nowrap;letter-spacing:-.02em}
+@media (max-width:350px){.info dl{grid-template-columns:58px 1fr}.info dd.hrs span{font-size:14px}}
 
 /* PROGRAM */
 .prog{background:linear-gradient(180deg,var(--l2),#fff)}
@@ -211,7 +213,7 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
   <div class="card fx">
     <dl>
       <dt>일시</dt><dd>2026. 10. 23(금) – 10. 25(일)</dd>
-      <dt>운영시간</dt><dd>10.23(금) 13:00 – 20:00<small>10.24(토) – 25(일) 10:30 – 20:00</small></dd>
+      <dt>운영시간</dt><dd class="hrs"><span>10.23(금) 13:00 – 20:00</span><span>10.24(토)–25(일) 10:30 – 20:00</span></dd>
       <dt>장소</dt><dd>송도 트리플스트리트 A동 광장</dd>
       <dt>입장료</dt><dd><b>무료</b> · 누구나 자유롭게 방문하세요</dd>
     </dl>
@@ -297,7 +299,7 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
   <div class="eyebrow fx">BRANDS &amp; MAP</div>
   <h2 class="fx">참여기업 20곳과 부스 위치</h2>
   <p class="lead fx">로고나 부스 번호를 누르면 위치를 바로 확인할 수 있어요</p>
-  <div class="map fx"><div id="mapHome"><svg id="map" viewBox="19 0 422 342" role="img" aria-label="부스 배치도"></svg></div>
+  <div class="map fx"><div id="mapHome"><svg id="map" viewBox="19 0 422 358" role="img" aria-label="부스 배치도"></svg></div>
     <button type="button" class="zoom-btn" id="zoomOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M11 8v6M8 11h6"/></svg>배치도 크게 보기</button>
     <div class="sel empty" id="sel">부스를 선택해 보세요</div>
   </div>
@@ -351,18 +353,24 @@ const B=[["에이지앤뷰티","agebeauty"],["리블로셀","reblocell"],["씨�
 const ns="http://www.w3.org/2000/svg",svg=document.getElementById('map');
 function el(t,a,p){const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e}
 // 부스 배치도 (현장 배치도 기준 · 사이트 톤)
-svg.setAttribute('viewBox','19 0 422 342');
+svg.setAttribute('viewBox','19 0 422 358');
 const defs=el('defs',{});
 defs.innerHTML=`<linearGradient id="mbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBF8FF"/><stop offset="1" stop-color="#EEE5FF"/></linearGradient>
 <linearGradient id="bon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B3BD9"/><stop offset="1" stop-color="#A07CF0"/></linearGradient>
 <linearGradient id="lz" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7A55E6"/><stop offset="1" stop-color="#A07CF0"/></linearGradient>`;
-el('rect',{x:0,y:0,width:453,height:342,rx:14,fill:'url(#mbg)'});
+el('rect',{x:0,y:0,width:453,height:358,rx:14,fill:'url(#mbg)'});
 const T=(x,y,t,o={})=>{const e=el('text',Object.assign({x,y,class:'zl'},o));e.textContent=t;return e};
 // 상단 · 주변
 el('rect',{x:35,y:2,width:331,height:13,rx:4,fill:'#E9DFFC'});
 T(200,8.8,'ZARA',{fill:'#5B3BD9','font-size':8.5,'font-weight':800,'letter-spacing':1});
-T(387,7.5,'현대아울렛',{fill:'#24184A','font-size':6.5,'font-weight':800});
-T(26.5,165,'무신사',{fill:'#5B3BD9','font-size':8.5,'font-weight':800,'letter-spacing':2,transform:'rotate(-90 26.5 165)'});
+// 좌측: 14~17번 구간은 무신사, 4~13번 구간은 난간
+el('rect',{x:21,y:21,width:11,height:80.4,rx:4,fill:'#E9DFFC'});
+T(26.5,61,'무신사',{fill:'#5B3BD9','font-size':7.5,'font-weight':800,'letter-spacing':1.5,transform:'rotate(-90 26.5 61)'});
+el('line',{x1:29,y1:105,x2:29,y2:309,stroke:'#9A8FBF','stroke-width':1.6,'stroke-linecap':'round'});
+el('line',{x1:24,y1:105,x2:24,y2:309,stroke:'#9A8FBF','stroke-width':.8,'stroke-linecap':'round'});
+for(let y=109;y<=305;y+=8)el('line',{x1:24,y1:y,x2:29,y2:y,stroke:'#9A8FBF','stroke-width':.7});
+el('rect',{x:20.5,y:196,width:12,height:22,rx:3,fill:'#fff',stroke:'#D8CBF7','stroke-width':.6});
+T(26.5,207,'난간',{fill:'#6B6290','font-size':5.6,'font-weight':800,transform:'rotate(-90 26.5 207)'});
 T(433.5,165,'H&M',{fill:'#5B3BD9','font-size':8.5,'font-weight':800,'letter-spacing':1.5,transform:'rotate(90 433.5 165)'});
 // 행사장 영역
 el('rect',{x:35,y:17,width:389,height:298,rx:6,fill:'#fff',stroke:'#E3D8FA'});
@@ -380,16 +388,18 @@ T(220,167,'관람 스탠딩',{fill:'#fff','fill-opacity':.8,'font-size':5.2});
 // 포토존
 el('rect',{x:295,y:180,width:63,height:70,rx:6,fill:'#FFE9F3',stroke:'#E8559B','stroke-width':.8});
 T(326.5,215,'포토존',{fill:'#E8559B','font-size':8,'font-weight':800});
-// 이벤트데스크 · 운영사무국
+// 이벤트데스크
 el('rect',{x:301,y:273,width:49,height:14,rx:3,fill:'#5B3BD9'});
 T(325.5,280.2,'이벤트데스크',{fill:'#fff','font-size':5.2,'font-weight':800});
-el('rect',{x:354,y:265,width:35,height:34,rx:5,fill:'#24184A'});
-T(371.5,282,'운영사무국',{fill:'#fff','font-size':5.2,'font-weight':800});
+
 // 주출입구 · 횡단보도
 el('rect',{x:301,y:310,width:58,height:10,rx:5,fill:'#24184A'});
 T(330,315.2,'▲ 주출입구',{fill:'#fff','font-size':5.2,'font-weight':800});
 for(let i=0;i<9;i++)el('rect',{x:272+i*11,y:325,width:7,height:9,rx:1.5,fill:'#D8CBF7'});
 T(384,330,'횡단보도',{fill:'#9A8FBF','font-size':5});
+// 횡단보도 건너편: 송도 현대아울렛
+el('rect',{x:272,y:340,width:95,height:13,rx:4,fill:'#E9DFFC'});
+T(319.5,346.8,'현대아울렛',{fill:'#5B3BD9','font-size':7.5,'font-weight':800,'letter-spacing':.5});
 // 부스
 const BW=62,BH=18,pos={};
 [[17,40],[18,105],[19,170],[20,235]].forEach(([n,x])=>pos[n]=[x,21]);
@@ -435,7 +445,7 @@ document.querySelectorAll('.fx').forEach(e=>io.observe(e));
   let s=1,tx=0,ty=0,base={w:0,h:0},pts=new Map(),last=null;
   const apply=()=>{pan.style.transform=`translate(${tx}px,${ty}px) scale(${s})`};
   function layout(){
-    const W=stage.clientWidth,H=stage.clientHeight,ar=342/422,portrait=H>W;
+    const W=stage.clientWidth,H=stage.clientHeight,ar=358/422,portrait=H>W;
     let w,h; // 지도(회전 전) 크기
     if(portrait){w=Math.min(H-16,(W-16)/ar);h=w*ar;rot.style.width=w+'px';rot.style.transform='rotate(90deg)';base={w:h,h:w};}
     else{w=Math.min(W-16,(H-16)/ar);h=w*ar;rot.style.width=w+'px';rot.style.transform='none';base={w,h};}
