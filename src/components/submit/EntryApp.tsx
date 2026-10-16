@@ -6,7 +6,7 @@ import { Spinner, Wordmark } from "../ui/fields";
 
 /** 단톡방 공용 링크: 업체명 선택 + 담당자 휴대폰 뒷자리 4자리 확인 → 업체 입력 화면 */
 export default function EntryApp() {
-  const [companies, setCompanies] = useState<Array<{ id: string; name: string }> | null>(null);
+  const [companies, setCompanies] = useState<Array<{ id: string; name: string; submitted?: boolean }> | null>(null);
   const [loadError, setLoadError] = useState("");
   const [companyId, setCompanyId] = useState("");
   const [code, setCode] = useState("");
@@ -16,7 +16,7 @@ export default function EntryApp() {
   async function load() {
     setLoadError("");
     try {
-      setCompanies(await api<Array<{ id: string; name: string }>>("/api/entry/companies"));
+      setCompanies(await api<Array<{ id: string; name: string; submitted?: boolean }>>("/api/entry/companies"));
     } catch (e) {
       setLoadError(e instanceof Error ? e.message : "업체 목록을 불러오지 못했습니다.");
     }
@@ -24,6 +24,8 @@ export default function EntryApp() {
   useEffect(() => {
     load();
   }, []);
+
+  const submitted = !!companies?.find((c) => c.id === companyId)?.submitted;
 
   async function submit(e: React.FormEvent, dest: "info" | "sales" = "info") {
     e.preventDefault();
@@ -73,7 +75,7 @@ export default function EntryApp() {
           )}
 
           {companies && (
-            <form className="item-grid" onSubmit={(e) => submit(e, "info")} noValidate>
+            <form className="item-grid" onSubmit={(e) => submit(e, submitted ? "sales" : "info")} noValidate>
               <div className={`field${error && !companyId ? " invalid" : ""}`}>
                 <label className="field-label" htmlFor="entry-company">
                   <span className="q">1</span>
@@ -125,15 +127,28 @@ export default function EntryApp() {
                 </p>
               )}
 
-              <button className="btn btn-primary btn-lg btn-block" disabled={busy}>
-                {busy ? "확인 중…" : "참가정보 입력하기"}
-              </button>
-              <button type="button" className="btn btn-soft btn-lg btn-block" disabled={busy} onClick={(e) => submit(e, "sales")}>
+              {submitted ? (
+                <p className="notice" style={{ margin: 0 }}>
+                  참가정보 제출이 완료된 업체입니다. 행사 기간에는 아래 버튼으로 판매실적을 입력해 주세요.
+                </p>
+              ) : (
+                <button className="btn btn-primary btn-lg btn-block" disabled={busy}>
+                  {busy ? "확인 중…" : "참가정보 입력하기"}
+                </button>
+              )}
+              <button
+                type={submitted ? "submit" : "button"}
+                className={`btn ${submitted ? "btn-primary" : "btn-soft"} btn-lg btn-block`}
+                disabled={busy}
+                onClick={submitted ? undefined : (e) => submit(e, "sales")}
+              >
                 {busy ? "확인 중…" : "행사 판매실적 입력하기 (10/23~25)"}
               </button>
-              <p className="field-hint" style={{ margin: 0 }}>
-                이미 제출했어도 같은 방법으로 들어와 내용을 수정할 수 있습니다.
-              </p>
+              {!submitted && (
+                <p className="field-hint" style={{ margin: 0 }}>
+                  참가정보를 제출하면 다음 접속부터는 판매실적 입력 버튼만 표시됩니다.
+                </p>
+              )}
             </form>
           )}
         </section>

@@ -235,7 +235,7 @@ async function route(req: Request, path: string[]): Promise<Response> {
     if (!TOKEN.test(b)) throw new HttpError(404, "유효하지 않은 링크입니다. 운영사무국에서 받은 링크를 다시 확인해 주세요.");
     const state = await rpc<{ company: { id: string; name: string } } | null>("bw_get_by_token", { token: b });
     if (!state) throw new HttpError(404, "유효하지 않은 링크입니다. 운영사무국에서 받은 링크를 다시 확인해 주세요.");
-    const surveyUrl = process.env.SURVEY_URL?.trim() || DEFAULT_SURVEY_URL;
+    const surveyUrl = DEFAULT_SURVEY_URL;
 
     if (!c && method === "GET") {
       const entries = await rpc<SalesEntry[]>("bw_get_sales", { companyId: state.company.id });
@@ -261,7 +261,9 @@ async function route(req: Request, path: string[]): Promise<Response> {
   // ----- 단일 링크 접속 : 업체 선택 + 확인번호 -----
   if (a === "entry") {
     if (b === "companies" && method === "GET") {
-      return json(await rpc<Array<{ id: string; name: string }>>("bw_entry_companies"));
+      // 참가정보 제출 여부를 함께 내려 줍니다 (토큰 등 민감 정보는 제외)
+      const overview = await rpc<AdminOverview>("bw_admin_overview");
+      return json(overview.companies.map((c) => ({ id: c.id, name: c.name, submitted: !!c.submission })));
     }
     if (b === "verify" && method === "POST") {
       const body = await readJson(req, 4096);

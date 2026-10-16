@@ -16,8 +16,8 @@ export const EVENT_DAYS: EventDay[] = [
 
 export const EVENT_DATES = EVENT_DAYS.map((d) => d.date);
 
-/** 만족도조사(네이버폼) 기본 주소. 서버 환경변수 SURVEY_URL 로 바꿀 수 있습니다. */
-export const DEFAULT_SURVEY_URL = "https://naver.me/5imobOmk";
+/** 만족도조사(구글폼) 주소 */
+export const DEFAULT_SURVEY_URL = "https://forms.gle/2v9VWcqW82pRf4mX7";
 
 export const MAX_SALES_ITEMS = 1_000_000;
 export const MAX_SALES_AMOUNT = 10_000_000_000;
