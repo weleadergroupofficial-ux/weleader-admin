@@ -432,13 +432,13 @@ for(let n=1;n<=20;n++){
 // logos
 const L=document.getElementById('logos'),ls={};
 B.forEach(([nm,f],i)=>{const n=i+1,d=document.createElement('div');d.className='lg fx';
-  d.innerHTML=`<span class="no">${String(n).padStart(2,'0')}</span><img src="assets/logo_${f}.webp" alt="${nm}" loading="lazy"><span class="nm">${nm}</span>`;
+  d.innerHTML=`<span class="no">${String(n).padStart(2,'0')}</span><img src="assets/logo_${f}.webp?v=2" alt="${nm}" loading="lazy"><span class="nm">${nm}</span>`;
   d.onclick=()=>pick(n,true);L.appendChild(d);ls[n]=d;});
 const sel=document.getElementById('sel');let cur=0;
 function pick(n,fromLogo){
   if(cur){gs[cur].classList.remove('on');ls[cur].classList.remove('on')}
   cur=n;gs[n].classList.add('on');ls[n].classList.add('on');
-  sel.className='sel';sel.innerHTML=`<img src="assets/logo_${B[n-1][1]}_t.webp" alt=""><i></i><span>${B[n-1][0]}</span>`;
+  sel.className='sel';sel.innerHTML=`<img src="assets/logo_${B[n-1][1]}_t.webp?v=2" alt=""><i></i><span>${B[n-1][0]}</span>`;
   const cap=document.getElementById('mzCap');cap.className='mz-cap';cap.innerHTML=sel.innerHTML;
   if(fromLogo)document.querySelector('.map').scrollIntoView({behavior:'smooth',block:'center'});
 }
