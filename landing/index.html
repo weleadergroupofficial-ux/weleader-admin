@@ -347,9 +347,9 @@ footer .c{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.45)}
 <div class="toast" id="toast"></div>
 
 <script>
-const B=[["에이지앤뷰티","agebeauty"],["리블로셀","reblocell"],["씨앤씨솔루션","cnc"],["해시태그우디","hashtagwoody"],["비티바이오테라퓨틱스","btbio"],
-["아이테르글로벌","aiter"],["더멀매트릭스","dermatrix"],["알엔엘케이코스메틱","rnlk"],["스킨온유","skinonyou"],["아모르브","amorb"],
-["셀비오코스메틱","cellbio"],["갈렙이앤씨","galeb"],["이레코스메틱","irecos"],["로아카이브","loarchive"],["모스바이오","mosbio"],
+const B=[["에이지앤뷰티","agebeauty"],["멈핸즈오프","reblocell"],["씨앤씨솔루션","cnc"],["페이버스퀘어","hashtagwoody"],["비티바이오테라퓨틱스","btbio"],
+["아이테르글로벌","aiter"],["더멀매트릭스","dermatrix"],["RnLK Cosmetic","rnlk"],["스킨온유","skinonyou"],["아모르브","amorb"],
+["셀비오코스메틱","cellbio"],["디오비 뷰티랩","galeb"],["이레코스메틱","irecos"],["스웻띠어리","loarchive"],["모스바이오","mosbio"],
 ["하현","hahyun"],["스킨랩코리아","skinlab"],["웰빙헬스팜","wellbeing"],["디벨니티","develnity"],["비옴바이오랩스","biom"]];
 const ns="http://www.w3.org/2000/svg",svg=document.getElementById('map');
 function el(t,a,p){const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e}
@@ -432,13 +432,13 @@ for(let n=1;n<=20;n++){
 // logos
 const L=document.getElementById('logos'),ls={};
 B.forEach(([nm,f],i)=>{const n=i+1,d=document.createElement('div');d.className='lg fx';
-  d.innerHTML=`<span class="no">${String(n).padStart(2,'0')}</span><img src="assets/logo_${f}.webp?v=2" alt="${nm}" loading="lazy"><span class="nm">${nm}</span>`;
+  d.innerHTML=`<span class="no">${String(n).padStart(2,'0')}</span><img src="assets/logo_${f}.webp?v=3" alt="${nm}" loading="lazy"><span class="nm">${nm}</span>`;
   d.onclick=()=>pick(n,true);L.appendChild(d);ls[n]=d;});
 const sel=document.getElementById('sel');let cur=0;
 function pick(n,fromLogo){
   if(cur){gs[cur].classList.remove('on');ls[cur].classList.remove('on')}
   cur=n;gs[n].classList.add('on');ls[n].classList.add('on');
-  sel.className='sel';sel.innerHTML=`<img src="assets/logo_${B[n-1][1]}_t.webp?v=2" alt=""><i></i><span>${B[n-1][0]}</span>`;
+  sel.className='sel';sel.innerHTML=`<img src="assets/logo_${B[n-1][1]}_t.webp?v=3" alt=""><i></i><span>${B[n-1][0]}</span>`;
   const cap=document.getElementById('mzCap');cap.className='mz-cap';cap.innerHTML=sel.innerHTML;
   if(fromLogo)document.querySelector('.map').scrollIntoView({behavior:'smooth',block:'center'});
 }
