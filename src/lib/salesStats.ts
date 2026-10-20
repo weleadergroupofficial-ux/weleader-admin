@@ -13,6 +13,7 @@ export interface DayStat {
   weekday: string;
   entered: number; // 입력한 업체 수
   total: number; // 전체 업체 수
+  visitors: number;
   items: number;
   amount: number;
   missing: StatCompany[]; // 아직 입력하지 않은 업체
@@ -21,6 +22,7 @@ export interface DayStat {
 export interface CompanyTotal {
   id: string;
   name: string;
+  visitors: number;
   items: number;
   amount: number;
   days: number; // 입력한 일수
@@ -28,6 +30,7 @@ export interface CompanyTotal {
 
 export interface SalesStats {
   days: DayStat[];
+  visitors: number;
   items: number;
   amount: number;
   companiesEntered: number; // 1일이라도 입력한 업체 수
@@ -44,6 +47,7 @@ export function computeSalesStats(companies: StatCompany[], sales: SalesEntry[])
   for (const e of sales) if (e.companyId && known.has(e.companyId)) by.set(`${e.companyId}|${e.day}`, e);
 
   const days: DayStat[] = EVENT_DAYS.map((d) => {
+    let visitors = 0;
     let items = 0;
     let amount = 0;
     const missing: StatCompany[] = [];
@@ -52,30 +56,34 @@ export function computeSalesStats(companies: StatCompany[], sales: SalesEntry[])
       const e = by.get(`${c.id}|${d.date}`);
       if (e) {
         entered++;
+        visitors += e.visitors ?? 0;
         items += e.items;
         amount += e.amount;
       } else missing.push(c);
     }
-    return { date: d.date, short: d.short, label: d.label, weekday: d.weekday, entered, total: companies.length, items, amount, missing };
+    return { date: d.date, short: d.short, label: d.label, weekday: d.weekday, entered, total: companies.length, visitors, items, amount, missing };
   });
 
   const byCompany: CompanyTotal[] = companies.map((c) => {
+    let visitors = 0;
     let items = 0;
     let amount = 0;
     let n = 0;
     for (const d of EVENT_DAYS) {
       const e = by.get(`${c.id}|${d.date}`);
       if (e) {
+        visitors += e.visitors ?? 0;
         items += e.items;
         amount += e.amount;
         n++;
       }
     }
-    return { id: c.id, name: c.name, items, amount, days: n };
+    return { id: c.id, name: c.name, visitors, items, amount, days: n };
   });
 
   return {
     days,
+    visitors: days.reduce((a, d) => a + d.visitors, 0),
     items: days.reduce((a, d) => a + d.items, 0),
     amount: days.reduce((a, d) => a + d.amount, 0),
     companiesEntered: byCompany.filter((c) => c.days > 0).length,

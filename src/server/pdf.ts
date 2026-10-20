@@ -455,7 +455,7 @@ function footer(c: Ctx, page: number, total: number, ops: string[]) {
 function drawSheet(c: Ctx, sheet: SheetSpec, firstOnPage: boolean) {
   const cols = sheet.columns;
   const n = cols.length;
-  const size = n >= 12 ? 7.2 : n >= 9 ? 7.8 : n >= 6 ? 8.6 : 9.6;
+  const size = n >= 15 ? 6.6 : n >= 12 ? 7.2 : n >= 9 ? 7.8 : n >= 6 ? 8.6 : 9.6;
   const headSize = size - 0.2;
   const pad = 5;
   const lineH = size * 1.45;

@@ -21,12 +21,15 @@ export const DEFAULT_SURVEY_URL = "https://forms.gle/2v9VWcqW82pRf4mX7";
 
 export const MAX_SALES_ITEMS = 1_000_000;
 export const MAX_SALES_AMOUNT = 10_000_000_000;
+export const MAX_VISITORS = 1_000_000;
 
 export interface SalesEntry {
   companyId?: string;
   day: string;
   items: number;
   amount: number;
+  /** 부스 방문객 수 (방문객 항목 추가 전에 제출한 기록은 null) */
+  visitors: number | null;
   surveyDone: boolean;
   revision: number;
   firstSubmittedAt: string;
@@ -44,12 +47,13 @@ export function todayKst(now = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
 
-export function validateSales(raw: unknown): { ok: true; items: number; amount: number; surveyDone: boolean } | { ok: false; errors: Record<string, string> } {
+export function validateSales(raw: unknown): { ok: true; items: number; amount: number; visitors: number; surveyDone: boolean } | { ok: false; errors: Record<string, string> } {
   const errors: Record<string, string> = {};
   const o = typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
   const isInt = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v);
   if (!isInt(o.items) || o.items < 0 || o.items > MAX_SALES_ITEMS) errors.items = "판매 상품 건수를 0 이상의 숫자로 입력해 주세요.";
+  if (!isInt(o.visitors) || o.visitors < 0 || o.visitors > MAX_VISITORS) errors.visitors = "부스 방문객 수를 0 이상의 숫자(명)로 입력해 주세요.";
   if (!isInt(o.amount) || o.amount < 0 || o.amount > MAX_SALES_AMOUNT) errors.amount = "총 판매금액을 0 이상의 숫자(원)로 입력해 주세요.";
   if (Object.keys(errors).length) return { ok: false, errors };
-  return { ok: true, items: o.items as number, amount: o.amount as number, surveyDone: o.surveyDone === true };
+  return { ok: true, items: o.items as number, amount: o.amount as number, visitors: o.visitors as number, surveyDone: o.surveyDone === true };
 }

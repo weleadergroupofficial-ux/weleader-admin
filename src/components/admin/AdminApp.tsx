@@ -1335,7 +1335,7 @@ function Downloads({ ctx }: { ctx: Ctx }) {
     ["all", "전체 참가업체 제출 정보", "업체별 제출 현황, 대표 판매상품, 럭키드로우 경품을 시트(쪽)별로 나눠 담습니다. 미제출 업체도 포함됩니다."],
     ["price-board", "가격 안내판 제작용 데이터", "제출 업체의 상품명·정상가·할인가·할인 금액·할인율·샘플·추가 혜택을 상품 단위로 정리합니다."],
     ["lucky-draw", "럭키드로우 경품 관리 데이터", "경품별 수량·정상가·총금액과 업체별 합계, 전체 합계를 담습니다."],
-    ["sales", "일자별 판매실적", "10/23·24·25 업체별 판매 건수·금액, 합계, 10/25 만족도조사 여부와 입력 내역을 담습니다."],
+    ["sales", "일자별 판매실적", "10/23·24·25 업체별 부스 방문객 수·판매 건수·금액, 합계, 10/25 만족도조사 여부와 입력 내역을 담습니다."],
     ["sales-report", "판매실적 성과 리포트", "일자별 입력률·판매 건수·금액, 상위 업체 TOP10, 미입력 업체, 산출 기준을 보고용으로 정리합니다. 주최·주관·운영 표기가 들어갑니다."],
     ["links", "업체별 제출 링크 목록", "업체명과 전용 제출 링크, 현재 제출 여부를 담습니다. 링크 일괄 안내에 사용하세요."],
   ];
@@ -1405,19 +1405,22 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
   const stats = useMemo(() => computeSalesStats(ctx.data.companies, rows ?? []), [ctx.data.companies, rows]);
   const companies = ctx.data.companies.filter((c) => !q.trim() || c.name.toLowerCase().includes(q.trim().toLowerCase()));
   const totals = EVENT_DAYS.map((d) => {
+    let visitors = 0;
     let items = 0;
     let amount = 0;
     let n = 0;
     for (const c of ctx.data.companies) {
       const e = by.get(`${c.id}|${d.date}`);
       if (e) {
+        visitors += e.visitors ?? 0;
         items += e.items;
         amount += e.amount;
         n++;
       }
     }
-    return { items, amount, n };
+    return { visitors, items, amount, n };
   });
+  const gVisitors = totals.reduce((a, t) => a + t.visitors, 0);
   const gItems = totals.reduce((a, t) => a + t.items, 0);
   const gAmount = totals.reduce((a, t) => a + t.amount, 0);
   const lastDay = EVENT_DAYS[EVENT_DAYS.length - 1].date;
@@ -1428,7 +1431,7 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
       <div className="ad-top">
         <div>
           <h1>판매실적</h1>
-          <p>업체가 행사일(10/23·24·25)별로 제출한 판매 건수와 금액입니다. 30초마다 자동으로 새로 불러옵니다.</p>
+          <p>업체가 행사일(10/23·24·25)별로 제출한 부스 방문객 수, 판매 건수와 금액입니다. 30초마다 자동으로 새로 불러옵니다.</p>
         </div>
         <div className="dl-actions">
           <button className="btn btn-primary btn-sm" disabled={dl.busy !== null} onClick={() => dl.run("sales")}>
@@ -1449,6 +1452,10 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
       {rows && (
         <>
           <div className="sales-kpis">
+            <div className="sales-kpi">
+              <div className="k">총 부스 방문객</div>
+              <div className="v">{formatNumber(gVisitors)}명</div>
+            </div>
             <div className="sales-kpi">
               <div className="k">총 판매 건수</div>
               <div className="v">{formatNumber(gItems)}건</div>
@@ -1488,11 +1495,11 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
                   <tr>
                     <th rowSpan={2}>업체명</th>
                     {EVENT_DAYS.map((d) => (
-                      <th key={d.date} colSpan={2} className="c day-sep">
+                      <th key={d.date} colSpan={3} className="c day-sep">
                         {d.label} ({d.weekday})
                       </th>
                     ))}
-                    <th colSpan={2} className="c day-sep">
+                    <th colSpan={3} className="c day-sep">
                       합계
                     </th>
                     <th rowSpan={2} className="c">
@@ -1501,7 +1508,10 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
                   </tr>
                   <tr>
                     {[...EVENT_DAYS, null].flatMap((d, i) => [
-                      <th key={`a${i}`} className={`r${i >= 0 ? " day-sep" : ""}`}>
+                      <th key={`v${i}`} className="r day-sep">
+                        방문객
+                      </th>,
+                      <th key={`a${i}`} className="r">
                         건수
                       </th>,
                       <th key={`b${i}`} className="r">
@@ -1512,16 +1522,21 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
                 </thead>
                 <tbody>
                   {companies.map((c) => {
+                    let tv = 0;
                     let ti = 0;
                     let ta = 0;
                     const cells = EVENT_DAYS.flatMap((d) => {
                       const e = by.get(`${c.id}|${d.date}`);
                       if (e) {
+                        tv += e.visitors ?? 0;
                         ti += e.items;
                         ta += e.amount;
                       }
                       return [
-                        <td key={`${d.date}i`} className="r num day-sep">
+                        <td key={`${d.date}v`} className="r num day-sep">
+                          {e ? e.visitors !== null && e.visitors !== undefined ? formatNumber(e.visitors) : <span className="muted">-</span> : <span className="muted">미입력</span>}
+                        </td>,
+                        <td key={`${d.date}i`} className="r num">
                           {e ? formatNumber(e.items) : <span className="muted">미입력</span>}
                         </td>,
                         <td key={`${d.date}a`} className="r num">
@@ -1536,6 +1551,9 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
                         <td>{c.name}</td>
                         {cells}
                         <td className="r num day-sep">
+                          {any ? <strong>{formatNumber(tv)}</strong> : <span className="muted">미입력</span>}
+                        </td>
+                        <td className="r num">
                           {any ? <strong>{formatNumber(ti)}</strong> : <span className="muted">미입력</span>}
                         </td>
                         <td className="r num">
@@ -1549,7 +1567,7 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
                   })}
                   {companies.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="muted" style={{ textAlign: "center" }}>
+                      <td colSpan={13} className="muted" style={{ textAlign: "center" }}>
                         조건에 맞는 업체가 없습니다.
                       </td>
                     </tr>
@@ -1559,14 +1577,18 @@ function SalesAdmin({ ctx }: { ctx: Ctx }) {
                   <tr>
                     <td>전체 합계</td>
                     {totals.flatMap((t, i) => [
-                      <td key={`ti${i}`} className="r num day-sep">
+                      <td key={`tv${i}`} className="r num day-sep">
+                        {formatNumber(t.visitors)}
+                      </td>,
+                      <td key={`ti${i}`} className="r num">
                         {formatNumber(t.items)}
                       </td>,
                       <td key={`ta${i}`} className="r num">
                         {formatNumber(t.amount)}
                       </td>,
                     ])}
-                    <td className="r num day-sep">{formatNumber(gItems)}</td>
+                    <td className="r num day-sep">{formatNumber(gVisitors)}</td>
+                    <td className="r num">{formatNumber(gItems)}</td>
                     <td className="r num">{formatNumber(gAmount)}</td>
                     <td />
                   </tr>
@@ -1596,7 +1618,7 @@ function describe(l: AuditLog): string {
   }
   if (l.action === "sales_created" || l.action === "sales_updated") {
     const day = typeof d.day === "string" ? d.day.slice(5).replace("-", "/") : "";
-    return `${day} · ${formatNumber(Number(d.items ?? 0))}건 / ${formatNumber(Number(d.amount ?? 0))}원${d.surveyDone ? " · 만족도조사 완료" : ""}`;
+    return `${day} · ${d.visitors !== undefined && d.visitors !== null ? `방문객 ${formatNumber(Number(d.visitors))}명 · ` : ""}${formatNumber(Number(d.items ?? 0))}건 / ${formatNumber(Number(d.amount ?? 0))}원${d.surveyDone ? " · 만족도조사 완료" : ""}`;
   }
   if (l.action === "submission_created" || l.action === "submission_updated") {
     const after = d.after as Submission | undefined;

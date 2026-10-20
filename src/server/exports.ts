@@ -235,47 +235,57 @@ function salesSheets(companies: AdminCompany[], sales: SalesEntry[]): SheetSpec[
   for (const e of sales) if (e.companyId) by.set(`${e.companyId}|${e.day}`, e);
 
   const rows: SheetSpec["rows"] = [];
-  const totals = { items: EVENT_DAYS.map(() => 0), amount: EVENT_DAYS.map(() => 0) };
+  const totals = { visitors: EVENT_DAYS.map(() => 0), items: EVENT_DAYS.map(() => 0), amount: EVENT_DAYS.map(() => 0) };
   companies.forEach((c, i) => {
     const row: SheetSpec["rows"][number] = [i + 1, c.name];
+    let tv = 0;
     let ti = 0;
     let ta = 0;
     EVENT_DAYS.forEach((d, di) => {
       const e = by.get(`${c.id}|${d.date}`);
-      row.push(e ? e.items : NOT_ENTERED, e ? e.amount : NOT_ENTERED);
+      row.push(e ? (e.visitors ?? NOT_ENTERED) : NOT_ENTERED, e ? e.items : NOT_ENTERED, e ? e.amount : NOT_ENTERED);
       if (e) {
+        totals.visitors[di] += e.visitors ?? 0;
         totals.items[di] += e.items;
         totals.amount[di] += e.amount;
+        tv += e.visitors ?? 0;
         ti += e.items;
         ta += e.amount;
       }
     });
     const last = by.get(`${c.id}|${EVENT_DAYS[EVENT_DAYS.length - 1].date}`);
     const entered = EVENT_DAYS.filter((d) => by.has(`${c.id}|${d.date}`)).length;
-    row.push(entered ? ti : NOT_ENTERED, entered ? ta : NOT_ENTERED, `${entered}/${EVENT_DAYS.length}일`, last ? (last.surveyDone ? "완료" : "미완료") : "");
+    row.push(entered ? tv : NOT_ENTERED, entered ? ti : NOT_ENTERED, entered ? ta : NOT_ENTERED, `${entered}/${EVENT_DAYS.length}일`, last ? (last.surveyDone ? "완료" : "미완료") : "");
     rows.push(row);
   });
 
   const columns: SheetSpec["columns"] = [{ header: "순번", width: 6, type: "center" }, { header: "업체명", width: 26 }];
   for (const d of EVENT_DAYS) {
-    columns.push({ header: `${d.short} 판매 건수`, width: 11, type: "number" }, { header: `${d.short} 판매금액(원)`, width: 16, type: "number" });
+    columns.push(
+      { header: `${d.short} 방문객(명)`, width: 11, type: "number" },
+      { header: `${d.short} 판매 건수`, width: 11, type: "number" },
+      { header: `${d.short} 판매금액(원)`, width: 16, type: "number" },
+    );
   }
   columns.push(
+    { header: "총 방문객(명)", width: 12, type: "number" },
     { header: "총 판매 건수", width: 12, type: "number" },
     { header: "총 판매금액(원)", width: 17, type: "number" },
     { header: "입력 일수", width: 10, type: "center" },
     { header: "10/25 만족도조사", width: 13, type: "center" },
   );
   const sumRow: SheetSpec["rows"][number] = ["", "전체 합계"];
+  let gv = 0;
   let gi = 0;
   let ga = 0;
   EVENT_DAYS.forEach((_, di) => {
-    sumRow.push(sum(2 + di * 2, rows.length, totals.items[di]), sum(3 + di * 2, rows.length, totals.amount[di]));
+    sumRow.push(sum(2 + di * 3, rows.length, totals.visitors[di]), sum(3 + di * 3, rows.length, totals.items[di]), sum(4 + di * 3, rows.length, totals.amount[di]));
+    gv += totals.visitors[di];
     gi += totals.items[di];
     ga += totals.amount[di];
   });
-  const base = 2 + EVENT_DAYS.length * 2;
-  sumRow.push(sum(base, rows.length, gi), sum(base + 1, rows.length, ga), "", "");
+  const base = 2 + EVENT_DAYS.length * 3;
+  sumRow.push(sum(base, rows.length, gv), sum(base + 1, rows.length, gi), sum(base + 2, rows.length, ga), "", "");
 
   const detail: SheetSpec["rows"] = [];
   const nameOf = new Map(companies.map((c) => [c.id, c.name]));
@@ -288,6 +298,7 @@ function salesSheets(companies: AdminCompany[], sales: SalesEntry[]): SheetSpec[
       detail.push([
         day ? `${day.label} (${day.weekday})` : e.day,
         nameOf.get(e.companyId!) ?? "",
+        e.visitors ?? NOT_ENTERED,
         e.items,
         e.amount,
         day?.last ? (e.surveyDone ? "완료" : "미완료") : "",
@@ -311,6 +322,7 @@ function salesSheets(companies: AdminCompany[], sales: SalesEntry[]): SheetSpec[
       columns: [
         { header: "행사 일자", width: 16, type: "center" },
         { header: "업체명", width: 26 },
+        { header: "방문객(명)", width: 11, type: "number" },
         { header: "판매 건수", width: 11, type: "number" },
         { header: "판매금액(원)", width: 16, type: "number" },
         { header: "만족도조사", width: 12, type: "center" },
@@ -337,6 +349,7 @@ function reportSheets(companies: AdminCompany[], sales: SalesEntry[]): SheetSpec
     `${d.label} (${EVENT_DAYS.find((x) => x.date === d.date)?.weekday ?? ""})`,
     d.entered > 0 ? `${d.entered} / ${d.total}개` : NOT_ENTERED,
     d.entered > 0 ? pct(d.entered, d.total) : null,
+    d.entered > 0 ? d.visitors : NOT_ENTERED,
     d.entered > 0 ? d.items : NOT_ENTERED,
     d.entered > 0 ? d.amount : NOT_ENTERED,
     d.entered > 0 ? Math.round(d.amount / d.entered) : NOT_ENTERED,
@@ -356,6 +369,7 @@ function reportSheets(companies: AdminCompany[], sales: SalesEntry[]): SheetSpec
         { header: "행사 일자", width: 16, type: "center" },
         { header: "입력 업체", width: 14, type: "center" },
         { header: "입력률", width: 10, type: "percent" },
+        { header: "부스 방문객(명)", width: 14, type: "number" },
         { header: "판매 건수", width: 13, type: "number" },
         { header: "판매금액(원)", width: 18, type: "number" },
         { header: "입력 업체 평균(원)", width: 18, type: "number" },
@@ -365,6 +379,7 @@ function reportSheets(companies: AdminCompany[], sales: SalesEntry[]): SheetSpec
         "합계",
         st.companiesEntered > 0 ? `${st.companiesEntered} / ${st.companiesTotal}개` : NOT_ENTERED,
         st.companiesEntered > 0 ? pct(st.companiesEntered, st.companiesTotal) : null,
+        st.companiesEntered > 0 ? st.visitors : NOT_ENTERED,
         st.companiesEntered > 0 ? st.items : NOT_ENTERED,
         st.companiesEntered > 0 ? st.amount : NOT_ENTERED,
         st.companiesEntered > 0 ? Math.round(st.amount / st.companiesEntered) : NOT_ENTERED,
@@ -434,6 +449,7 @@ export function buildExportDoc(type: ExportType, companies: AdminCompany[], base
     const any = st.companiesEntered > 0;
     kpis = [
       ["입력 업체", `${st.companiesEntered} / ${st.companiesTotal}개 (${Math.round(pct(st.companiesEntered, st.companiesTotal) * 100)}%)`],
+      ["총 부스 방문객", any ? `${st.visitors.toLocaleString("ko-KR")}명` : NOT_ENTERED],
       ["총 판매 건수", any ? `${st.items.toLocaleString("ko-KR")}건` : NOT_ENTERED],
       ["총 판매금액", any ? `${st.amount.toLocaleString("ko-KR")}원` : NOT_ENTERED],
     ];
@@ -442,9 +458,11 @@ export function buildExportDoc(type: ExportType, companies: AdminCompany[], base
     const rows = sales.filter((e) => e.companyId && known.has(e.companyId));
     const items = rows.reduce((a, e) => a + e.items, 0);
     const amount = rows.reduce((a, e) => a + e.amount, 0);
+    const visitors = rows.reduce((a, e) => a + (e.visitors ?? 0), 0);
     const entered = new Set(rows.map((e) => e.companyId)).size;
     kpis = [
       ["입력 업체", `${entered} / ${companies.length}개`],
+      ["총 부스 방문객", `${visitors.toLocaleString("ko-KR")}명`],
       ["총 판매 건수", `${items.toLocaleString("ko-KR")}건`],
       ["총 판매금액", `${amount.toLocaleString("ko-KR")}원`],
     ];

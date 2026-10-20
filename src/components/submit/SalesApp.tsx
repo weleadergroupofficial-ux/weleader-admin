@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "@/lib/client";
 import { formatDateTime, formatNumber } from "@/lib/calc";
-import { EVENT_DAYS, MAX_SALES_AMOUNT, MAX_SALES_ITEMS, todayKst, type SalesEntry, type SalesState } from "@/lib/event";
+import { EVENT_DAYS, MAX_SALES_AMOUNT, MAX_SALES_ITEMS, MAX_VISITORS, todayKst, type SalesEntry, type SalesState } from "@/lib/event";
 import { Spinner, Wordmark } from "../ui/fields";
 import { CompanyTabs } from "./CompanyTabs";
 
@@ -24,6 +24,7 @@ export default function SalesApp({ token }: { token: string }) {
   const [day, setDay] = useState(EVENT_DAYS[0].date);
   const [items, setItems] = useState("");
   const [amount, setAmount] = useState("");
+  const [visitors, setVisitors] = useState("");
   const [surveyOpened, setSurveyOpened] = useState(false);
   const [surveyChecked, setSurveyChecked] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -37,6 +38,7 @@ export default function SalesApp({ token }: { token: string }) {
       const e = entryOf(s, d);
       setItems(e ? String(e.items) : "");
       setAmount(e ? String(e.amount) : "");
+      setVisitors(e && e.visitors !== null && e.visitors !== undefined ? String(e.visitors) : "");
       setSurveyOpened(!!e?.surveyDone);
       setSurveyChecked(!!e?.surveyDone);
       setErrors({});
@@ -75,11 +77,11 @@ export default function SalesApp({ token }: { token: string }) {
   const needSurvey = cur.last && !surveyAlready;
 
   const dirty = useMemo(() => {
-    if (!saved) return items !== "" || amount !== "";
-    return String(saved.items) !== items || String(saved.amount) !== amount;
-  }, [saved, items, amount]);
+    if (!saved) return items !== "" || amount !== "" || visitors !== "";
+    return String(saved.items) !== items || String(saved.amount) !== amount || String(saved.visitors ?? "") !== visitors;
+  }, [saved, items, amount, visitors]);
 
-  const canSubmit = items !== "" && amount !== "" && (!needSurvey || (surveyOpened && surveyChecked)) && !busy;
+  const canSubmit = visitors !== "" && items !== "" && amount !== "" && (!needSurvey || (surveyOpened && surveyChecked)) && !busy;
 
   function pickDay(d: string) {
     if (d === day) return;
@@ -92,6 +94,7 @@ export default function SalesApp({ token }: { token: string }) {
     e.preventDefault();
     if (!state) return;
     const errs: Record<string, string> = {};
+    if (visitors === "") errs.visitors = "부스 방문객 수를 입력해 주세요. 방문객이 없었다면 0을 입력해 주세요.";
     if (items === "") errs.items = "판매 상품 건수를 입력해 주세요. 판매가 없었다면 0을 입력해 주세요.";
     if (amount === "") errs.amount = "총 판매금액을 입력해 주세요. 판매가 없었다면 0을 입력해 주세요.";
     if (needSurvey && !(surveyOpened && surveyChecked)) errs.survey = "만족도조사를 완료한 뒤에 제출할 수 있습니다.";
@@ -103,7 +106,7 @@ export default function SalesApp({ token }: { token: string }) {
     try {
       const r = await api<{ entry: SalesEntry }>(`/api/sales/${encodeURIComponent(token)}/${day}`, {
         method: "PUT",
-        json: { items: Number(items), amount: Number(amount), surveyDone: cur.last ? surveyChecked || surveyAlready : false },
+        json: { visitors: Number(visitors), items: Number(items), amount: Number(amount), surveyDone: cur.last ? surveyChecked || surveyAlready : false },
       });
       const next: SalesState = { ...state, entries: [...state.entries.filter((x) => x.day !== day), r.entry].sort((a, b) => a.day.localeCompare(b.day)) };
       setState(next);
@@ -120,7 +123,7 @@ export default function SalesApp({ token }: { token: string }) {
 
   const total = useMemo(() => {
     const e = state?.entries ?? [];
-    return { items: e.reduce((a, x) => a + x.items, 0), amount: e.reduce((a, x) => a + x.amount, 0), days: e.length };
+    return { visitors: e.reduce((a, x) => a + (x.visitors ?? 0), 0), items: e.reduce((a, x) => a + x.items, 0), amount: e.reduce((a, x) => a + x.amount, 0), days: e.length };
   }, [state]);
 
   return (
@@ -170,7 +173,7 @@ export default function SalesApp({ token }: { token: string }) {
 
             <div className="intro">
               <p>
-                행사 <span className="emph">일자별로 판매 상품 건수와 총 판매금액</span>만 입력해 주세요. 제출한 뒤에도 같은 화면에서 숫자를 고쳐 다시 제출할 수
+                행사 <span className="emph">일자별로 부스 방문객 수, 판매 상품 건수, 총 판매금액</span>을 입력해 주세요. 제출한 뒤에도 같은 화면에서 숫자를 고쳐 다시 제출할 수
                 있습니다.
               </p>
               <p>
@@ -181,7 +184,8 @@ export default function SalesApp({ token }: { token: string }) {
             <div className="day-tabs" role="tablist" aria-label="행사 일자">
               {EVENT_DAYS.map((d) => {
                 const e = entryOf(state, d.date);
-                const done = !!e && (!d.last || e.surveyDone);
+                const noVisitors = !!e && (e.visitors === null || e.visitors === undefined);
+                const done = !!e && !noVisitors && (!d.last || e.surveyDone);
                 return (
                   <button
                     key={d.date}
@@ -193,7 +197,7 @@ export default function SalesApp({ token }: { token: string }) {
                   >
                     <span className="d">{d.short}</span>
                     <span className="w">{d.weekday}요일</span>
-                    <span className="st">{done ? "제출 완료" : e ? "설문 필요" : "미입력"}</span>
+                    <span className="st">{done ? "제출 완료" : noVisitors ? "방문객 입력 필요" : e ? "설문 필요" : "미입력"}</span>
                   </button>
                 );
               })}
@@ -205,14 +209,41 @@ export default function SalesApp({ token }: { token: string }) {
                   {cur.label} ({cur.weekday}) 판매실적
                 </h2>
                 <p className="section-desc">
-                  {saved ? `최종 제출 ${formatDateTime(saved.updatedAt)} · 아래 숫자를 고쳐 다시 제출할 수 있습니다.` : "이 날 판매한 내용을 입력해 주세요. 판매가 없었다면 0을 입력합니다."}
+                  {saved ? `최종 제출 ${formatDateTime(saved.updatedAt)} · 아래 숫자를 고쳐 다시 제출할 수 있습니다.` : "이 날의 방문객 수와 판매 내용을 입력해 주세요. 없었다면 0을 입력합니다."}
                 </p>
               </div>
 
               <div className="item-grid">
+                <div className={`field${errors.visitors ? " invalid" : ""}`}>
+                  <label className="field-label" htmlFor="sales-visitors">
+                    <span className="q">1</span>
+                    <span>부스 방문객 수 (명)</span>
+                  </label>
+                  <div className="input-wrap">
+                    <input
+                      id="sales-visitors"
+                      className="input has-suffix num"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      placeholder="예) 120"
+                      value={show(visitors)}
+                      onChange={(e) => {
+                        setVisitors(digits(e.target.value, MAX_VISITORS));
+                        setMessage(null);
+                        setErrors((x) => ({ ...x, visitors: "" }));
+                      }}
+                      data-field
+                    />
+                    <span className="input-suffix">명</span>
+                  </div>
+                  <p className="field-hint">이 날 부스를 찾은 방문객 수를 대략적으로 입력해 주세요.</p>
+                  {errors.visitors && <p className="field-error">{errors.visitors}</p>}
+                </div>
+
                 <div className={`field${errors.items ? " invalid" : ""}`}>
                   <label className="field-label" htmlFor="sales-items">
-                    <span className="q">1</span>
+                    <span className="q">2</span>
                     <span>판매 상품 (건)</span>
                   </label>
                   <div className="input-wrap">
@@ -238,7 +269,7 @@ export default function SalesApp({ token }: { token: string }) {
 
                 <div className={`field${errors.amount ? " invalid" : ""}`}>
                   <label className="field-label" htmlFor="sales-amount">
-                    <span className="q">2</span>
+                    <span className="q">3</span>
                     <span>총 판매금액 (원)</span>
                   </label>
                   <div className="input-wrap">
@@ -314,7 +345,7 @@ export default function SalesApp({ token }: { token: string }) {
               <div className="section-head">
                 <h2 className="section-title">지금까지 제출한 내용</h2>
                 <p className="section-desc">
-                  {total.days}일 제출 · 합계 {formatNumber(total.items)}건 / {formatNumber(total.amount)}원
+                  {total.days}일 제출 · 합계 방문객 {formatNumber(total.visitors)}명 · {formatNumber(total.items)}건 / {formatNumber(total.amount)}원
                 </p>
               </div>
               <div className="table-wrap">
@@ -322,6 +353,7 @@ export default function SalesApp({ token }: { token: string }) {
                   <thead>
                     <tr>
                       <th>일자</th>
+                      <th className="r">방문객</th>
                       <th className="r">판매 건수</th>
                       <th className="r">판매금액</th>
                       <th className="c">상태</th>
@@ -335,9 +367,10 @@ export default function SalesApp({ token }: { token: string }) {
                           <td>
                             {d.label} ({d.weekday})
                           </td>
+                          <td className="r num">{e ? e.visitors !== null && e.visitors !== undefined ? `${formatNumber(e.visitors)}명` : <span className="muted">-</span> : <span className="muted">미입력</span>}</td>
                           <td className="r num">{e ? `${formatNumber(e.items)}건` : <span className="muted">미입력</span>}</td>
                           <td className="r num">{e ? `${formatNumber(e.amount)}원` : <span className="muted">미입력</span>}</td>
-                          <td className="c">{e ? (d.last && !e.surveyDone ? "설문 필요" : "제출 완료") : "미입력"}</td>
+                          <td className="c">{e ? (e.visitors === null || e.visitors === undefined ? "방문객 입력 필요" : d.last && !e.surveyDone ? "설문 필요" : "제출 완료") : "미입력"}</td>
                         </tr>
                       );
                     })}

@@ -251,8 +251,12 @@ async function route(req: Request, path: string[]): Promise<Response> {
         day: c,
         items: v.items,
         amount: v.amount,
+        visitors: v.visitors,
         surveyDone: v.surveyDone,
       });
+      // DB 에 방문객 수 항목(migration_03_visitors.sql)이 아직 적용되지 않았으면 저장이 누락되므로 알려 줍니다.
+      if (!entry || !("visitors" in entry) || entry.visitors === null)
+        throw new HttpError(500, "부스 방문객 수 저장 설정이 아직 적용되지 않았습니다. 판매 건수·금액은 저장되었으니 운영사무국에 문의해 주세요.");
       return json({ entry });
     }
     throw new HttpError(405, "지원하지 않는 요청입니다.");
