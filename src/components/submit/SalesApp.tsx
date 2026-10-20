@@ -17,7 +17,11 @@ function digits(v: string, max: number): string {
 }
 const show = (d: string) => (d === "" ? "" : formatNumber(Number(d)));
 
+/** /s/demo/sales : 로그인 없이 화면을 확인하는 미리보기 (서버에 저장하지 않음) */
+const DEMO_TOKEN = "demo";
+
 export default function SalesApp({ token }: { token: string }) {
+  const demo = token === DEMO_TOKEN;
   const [phase, setPhase] = useState<Phase>("loading");
   const [state, setState] = useState<SalesState | null>(null);
   const [loadError, setLoadError] = useState("");
@@ -50,7 +54,9 @@ export default function SalesApp({ token }: { token: string }) {
   const load = useCallback(async () => {
     setPhase("loading");
     try {
-      const s = await api<SalesState>(`/api/sales/${encodeURIComponent(token)}`);
+      const s: SalesState = demo
+        ? { company: { name: "테스트 업체 (미리보기)" }, entries: [], surveyUrl: "https://forms.gle/2v9VWcqW82pRf4mX7" }
+        : await api<SalesState>(`/api/sales/${encodeURIComponent(token)}`);
       setState(s);
       // 행사 기간이면 오늘 날짜 탭을, 아니면 첫날 탭을 먼저 보여줍니다.
       const today = todayKst();
@@ -65,7 +71,7 @@ export default function SalesApp({ token }: { token: string }) {
         setPhase("failed");
       }
     }
-  }, [token, fillFrom]);
+  }, [token, fillFrom, demo]);
 
   useEffect(() => {
     load();
@@ -104,10 +110,11 @@ export default function SalesApp({ token }: { token: string }) {
     setBusy(true);
     setMessage(null);
     try {
-      const r = await api<{ entry: SalesEntry }>(`/api/sales/${encodeURIComponent(token)}/${day}`, {
-        method: "PUT",
-        json: { visitors: Number(visitors), items: Number(items), amount: Number(amount), surveyDone: cur.last ? surveyChecked || surveyAlready : false },
-      });
+      const body = { visitors: Number(visitors), items: Number(items), amount: Number(amount), surveyDone: cur.last ? surveyChecked || surveyAlready : false };
+      const now = new Date().toISOString();
+      const r: { entry: SalesEntry } = demo
+        ? { entry: { day, ...body, revision: (saved?.revision ?? 0) + 1, firstSubmittedAt: saved?.firstSubmittedAt ?? now, updatedAt: now } }
+        : await api<{ entry: SalesEntry }>(`/api/sales/${encodeURIComponent(token)}/${day}`, { method: "PUT", json: body });
       const next: SalesState = { ...state, entries: [...state.entries.filter((x) => x.day !== day), r.entry].sort((a, b) => a.day.localeCompare(b.day)) };
       setState(next);
       setSurveyChecked(r.entry.surveyDone);
@@ -169,7 +176,13 @@ export default function SalesApp({ token }: { token: string }) {
 
         {phase === "ready" && state && (
           <>
-            <CompanyTabs token={token} active="sales" />
+            {demo ? (
+              <div className="notice notice-warn" style={{ marginBottom: 16 }}>
+                테스트용 미리보기 화면입니다. 입력·제출은 이 화면에서만 확인되며 실제로 저장되지 않습니다. 새로고침하면 초기화됩니다.
+              </div>
+            ) : (
+              <CompanyTabs token={token} active="sales" />
+            )}
 
             <div className="intro">
               <p>
