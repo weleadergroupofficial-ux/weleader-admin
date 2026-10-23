@@ -13,6 +13,7 @@ import {
   verifySessionToken,
 } from "./session";
 import { ConfigError, rpc, RpcError } from "./supabase";
+import { mergeVisitors, saveVisitorsFallback } from "./visitorsFallback";
 import { buildXlsx, readCsvFirstColumn, readFirstColumn } from "./xlsx";
 
 /**
@@ -238,7 +239,7 @@ async function route(req: Request, path: string[]): Promise<Response> {
     const surveyUrl = DEFAULT_SURVEY_URL;
 
     if (!c && method === "GET") {
-      const entries = await rpc<SalesEntry[]>("bw_get_sales", { companyId: state.company.id });
+      const entries = await mergeVisitors(await rpc<SalesEntry[]>("bw_get_sales", { companyId: state.company.id }), state.company.id);
       return json({ company: { name: state.company.name }, entries, surveyUrl });
     }
     if (c && method === "PUT") {
@@ -254,9 +255,11 @@ async function route(req: Request, path: string[]): Promise<Response> {
         visitors: v.visitors,
         surveyDone: v.surveyDone,
       });
-      // DB 에 방문객 수 항목(migration_03_visitors.sql)이 아직 적용되지 않았으면 저장이 누락되므로 알려 줍니다.
-      if (!entry || !("visitors" in entry) || entry.visitors === null)
-        throw new HttpError(500, "부스 방문객 수 저장 설정이 아직 적용되지 않았습니다. 판매 건수·금액은 저장되었으니 운영사무국에 문의해 주세요.");
+      // DB 에 visitors 컬럼(migration_03)이 아직 없으면 방문객 수를 감사로그에 따로 저장합니다.
+      if (entry && (entry.visitors === null || entry.visitors === undefined)) {
+        await saveVisitorsFallback(state.company.id, state.company.name, c, v.visitors);
+        return json({ entry: { ...entry, visitors: v.visitors } });
+      }
       return json({ entry });
     }
     throw new HttpError(405, "지원하지 않는 요청입니다.");
@@ -328,7 +331,7 @@ async function route(req: Request, path: string[]): Promise<Response> {
   }
 
   if (b === "sales" && method === "GET") {
-    return json(await rpc<SalesEntry[]>("bw_admin_sales"));
+    return json(await mergeVisitors(await rpc<SalesEntry[]>("bw_admin_sales")));
   }
 
   if (b === "template" && method === "GET") {
@@ -341,7 +344,7 @@ async function route(req: Request, path: string[]): Promise<Response> {
     const format = new URL(req.url).searchParams.get("format") === "pdf" ? "pdf" : "xlsx";
     const overview = await rpc<AdminOverview>("bw_admin_overview");
     let sales: SalesEntry[] = [];
-    if (type === "sales" || type === "sales-report") sales = await rpc<SalesEntry[]>("bw_admin_sales");
+    if (type === "sales" || type === "sales-report") sales = await mergeVisitors(await rpc<SalesEntry[]>("bw_admin_sales"));
     const doc = buildExportDoc(type, overview.companies, baseUrl(req), sales);
     const filename = `BEAUTYWAVE2026_${EXPORT_FILES[type]}_${stamp()}.${format}`;
     if (format === "pdf") return fileResponse(await buildPdf(doc, originOf(req)), filename, "application/pdf");

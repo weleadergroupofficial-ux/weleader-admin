@@ -61,3 +61,20 @@ export async function rpc<T>(fn: string, payload: Record<string, unknown> = {}):
   }
   return (body ? JSON.parse(body) : null) as T;
 }
+
+/** 테이블 직접 접근(REST) — 서버 전용, service_role 키 사용. */
+export async function rest<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
+  const { url, key } = config();
+  const headers: Record<string, string> = { "Content-Type": "application/json", Accept: "application/json", apikey: key };
+  if (key.startsWith("eyJ")) headers.Authorization = `Bearer ${key}`;
+  if (init.method === "POST") headers.Prefer = "return=minimal";
+  const res = await fetch(`${url}/rest/v1/${path}`, {
+    method: init.method ?? "GET",
+    headers,
+    body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    cache: "no-store",
+  });
+  const body = await res.text();
+  if (!res.ok) throw new RpcError(String(res.status), body, res.status);
+  return (body ? JSON.parse(body) : null) as T;
+}
